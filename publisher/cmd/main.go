@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stream-stack/monitor/pkg/config"
@@ -14,7 +13,6 @@ import (
 
 func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 	ctx, cancelFunc := context.WithCancel(context.TODO())
-	c := &config.Config{}
 	command := &cobra.Command{
 		Use:   ``,
 		Short: ``,
@@ -27,15 +25,11 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 				cancelFunc()
 			}()
 
-			if err := viper.Unmarshal(c); err != nil {
-				return err
-			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Printf("%+v \n", c)
 			//watcher
-			if err := watcher.Start(ctx, c); err != nil {
+			if err := watcher.Start(ctx); err != nil {
 				return err
 			}
 
@@ -43,14 +37,12 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 			return nil
 		},
 	}
+	watcher.InitFlags()
+	etcd.InitFlags()
+
 	viper.AutomaticEnv()
 	viper.AddConfigPath(`.`)
-	command.PersistentFlags().String("StoreType", "ETCD", "store type")
-	command.PersistentFlags().StringSlice("StoreAddress", []string{"127.0.0.1:2379"}, "store address")
-	//command.PersistentFlags().String("PartitionType", "HASH", "partition type")
-	viper.SetDefault("StoreType", etcd.StoreType)
-	viper.SetDefault("StoreAddress", "127.0.0.1:2379")
-	//viper.SetDefault("PartitionType", "HASH")
+	config.BuildFlags(command)
 
 	return command, ctx, cancelFunc
 }

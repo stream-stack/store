@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/stream-stack/store/pkg/config"
 	"github.com/stream-stack/store/pkg/proto"
 	"github.com/stream-stack/store/pkg/storage"
 	"google.golang.org/grpc"
@@ -43,12 +42,12 @@ func (s *StorageService) Save(ctx context.Context, request *proto.SaveRequest) (
 	}, nil
 }
 
-func Start(ctx context.Context, c *config.Config) error {
+func Start(ctx context.Context) error {
 	grpcServer := grpc.NewServer()
 	proto.RegisterStorageServer(grpcServer, &StorageService{})
 
 	go func() {
-		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", c.GrpcPort))
+		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", GrpcPort))
 		if err != nil {
 			log.Panicf("[grpc]listen error:%v", err)
 		}

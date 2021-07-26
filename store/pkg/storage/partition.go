@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/lafikl/consistent"
-	"github.com/stream-stack/store/pkg/config"
 )
 
 type PartitionType string
@@ -13,9 +12,9 @@ type PartitionFunc func(streamName, streamId, eventId string, s []Storage) (Stor
 
 const HASHPartitionType = "HASH"
 
-func HashPartitionFuncFactory(ctx context.Context, cfg *config.Config) (PartitionFunc, error) {
+func HashPartitionFuncFactory(ctx context.Context, addressSlice []string) (PartitionFunc, error) {
 	c := consistent.New()
-	for _, address := range cfg.StoreAddress {
+	for _, address := range addressSlice {
 		c.Add(address)
 	}
 	return func(streamName, streamId, eventId string, s []Storage) (Storage, error) {
@@ -28,7 +27,7 @@ func HashPartitionFuncFactory(ctx context.Context, cfg *config.Config) (Partitio
 				return storage, nil
 			}
 		}
-		return nil, fmt.Errorf("[storage]consistent return %v,but storage address not Not included", get)
+		return nil, fmt.Errorf("[storage]consistent return %v,but storage addressSlice not Not included", get)
 	}, nil
 }
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stream-stack/store/pkg/config"
@@ -15,7 +14,6 @@ import (
 
 func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 	ctx, cancelFunc := context.WithCancel(context.TODO())
-	c := &config.Config{}
 	command := &cobra.Command{
 		Use:   ``,
 		Short: ``,
@@ -27,20 +25,15 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 				<-c
 				cancelFunc()
 			}()
-
-			if err := viper.Unmarshal(c); err != nil {
-				return err
-			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Printf("%+v \n", c)
-			//1.storage
-			if err := storage.Start(ctx, c); err != nil {
+			//storage
+			if err := storage.Start(ctx); err != nil {
 				return err
 			}
-			//5.grpc server
-			if err := server.Start(ctx, c); err != nil {
+			//grpc server
+			if err := server.Start(ctx); err != nil {
 				return err
 			}
 
@@ -48,16 +41,13 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 			return nil
 		},
 	}
+	storage.InitFlags()
+	etcd.InitFlags()
+	server.InitFlags()
+	//TODO:移除viper?
 	viper.AutomaticEnv()
 	viper.AddConfigPath(`.`)
-	command.PersistentFlags().String("GrpcPort", "5001", "GrpcPort")
-	command.PersistentFlags().String("StoreType", etcd.StoreType, "store type")
-	command.PersistentFlags().StringSlice("StoreAddress", []string{"127.0.0.1:2379"}, "store address")
-	command.PersistentFlags().String("PartitionType", storage.HASHPartitionType, "partition type")
-	viper.SetDefault("GrpcPort", "5001")
-	viper.SetDefault("StoreType", etcd.StoreType)
-	viper.SetDefault("StoreAddress", "127.0.0.1:2379")
-	viper.SetDefault("PartitionType", storage.HASHPartitionType)
+	config.BuildFlags(command)
 
 	return command, ctx, cancelFunc
 }

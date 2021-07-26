@@ -4,18 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/stream-stack/store/pkg/config"
 	"github.com/stream-stack/store/pkg/storage"
 	"log"
 	"reflect"
-	"time"
 )
 
 const StoreType = "ETCD"
-
-func init() {
-	storage.Register(StoreType, NewStorageFunc)
-}
+const StorePrefix = "stream"
 
 type etcdConnect struct {
 	address string
@@ -55,13 +50,15 @@ func (e *etcdConnect) Get(ctx context.Context, streamName, streamId, eventId str
 }
 
 func formatStreamInfo(name string, id string) string {
-	return fmt.Sprintf("/%s/%s/", name, id)
+	return fmt.Sprintf("/%s/%s/%s/", StorePrefix, name, id)
 }
 
 func (e *etcdConnect) Save(ctx context.Context, streamName, streamId, eventId string, data []byte) error {
 	key := formatKey(streamName, streamId, eventId)
 	value := string(data)
-	txn := e.cli.Txn(ctx).If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0)).Then(clientv3.OpPut(key, value)).Else(clientv3.OpGet(key))
+	timeout, cancelFunc := context.WithTimeout(ctx, Timeout)
+	defer cancelFunc()
+	txn := e.cli.Txn(timeout).If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0)).Then(clientv3.OpPut(key, value)).Else(clientv3.OpGet(key))
 	commit, err := txn.Commit()
 	if err != nil {
 		return err
@@ -80,7 +77,7 @@ func (e *etcdConnect) Save(ctx context.Context, streamName, streamId, eventId st
 }
 
 func formatKey(streamName, streamId, eventId string) string {
-	return fmt.Sprintf("/%s/%s/%s", streamName, streamId, eventId)
+	return fmt.Sprintf("/%s/%s/%s/%s", StorePrefix, streamName, streamId, eventId)
 }
 
 func (e *etcdConnect) GetAddress() string {
@@ -88,15 +85,23 @@ func (e *etcdConnect) GetAddress() string {
 }
 
 func (e *etcdConnect) start(ctx context.Context, address string) error {
-	var err error
-	cfg := clientv3.Config{
-		Endpoints: []string{address},
-		//TODO:超时设置
-		DialTimeout: 5 * time.Second,
-		Context:     ctx,
-		Username:    "root",
-		Password:    "t1aZnKJLoR",
+	var cfg clientv3.Config
+	if len(Username) > 0 {
+		cfg = clientv3.Config{
+			Endpoints:   []string{address},
+			DialTimeout: Timeout,
+			Context:     ctx,
+			Username:    Username,
+			Password:    Password,
+		}
+	} else {
+		cfg = clientv3.Config{
+			Endpoints:   []string{address},
+			DialTimeout: Timeout,
+			Context:     ctx,
+		}
 	}
+	var err error
 	e.cli, err = clientv3.New(cfg)
 	if err != nil {
 		return err
@@ -110,9 +115,9 @@ func (e *etcdConnect) start(ctx context.Context, address string) error {
 	return nil
 }
 
-func NewStorageFunc(ctx context.Context, c *config.Config) ([]storage.Storage, error) {
-	storages := make([]storage.Storage, len(c.StoreAddress))
-	for i, address := range c.StoreAddress {
+func NewStorageFunc(ctx context.Context, addressSlice []string) ([]storage.Storage, error) {
+	storages := make([]storage.Storage, len(addressSlice))
+	for i, address := range addressSlice {
 		connect := &etcdConnect{address: address}
 		if err := connect.start(ctx, address); err != nil {
 			return nil, err

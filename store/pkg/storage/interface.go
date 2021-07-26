@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"errors"
-	"github.com/stream-stack/store/pkg/config"
 )
 
 type Storage interface {
@@ -12,7 +11,7 @@ type Storage interface {
 	Get(ctx context.Context, streamName, streamId, eventId string) ([]byte, error)
 }
 
-type Factory func(ctx context.Context, c *config.Config) ([]Storage, error)
+type Factory func(ctx context.Context, addressSlice []string) ([]Storage, error)
 
 const FirstEvent = "FIRST"
 const LastEvent = "LAST"

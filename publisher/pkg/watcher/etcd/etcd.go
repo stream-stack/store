@@ -3,17 +3,12 @@ package etcd
 import (
 	"context"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/stream-stack/monitor/pkg/config"
 	"github.com/stream-stack/monitor/pkg/watcher"
 	"log"
-	"time"
 )
 
 const StoreType = "ETCD"
-
-func init() {
-	watcher.Register(StoreType, NewStorageFunc)
-}
+const StorePrefix = "stream"
 
 type etcdConnect struct {
 	address string
@@ -22,7 +17,7 @@ type etcdConnect struct {
 
 func (e *etcdConnect) Watch(ctx context.Context) error {
 	go func() {
-		watch := e.cli.Watch(ctx, "/", clientv3.WithPrefix())
+		watch := e.cli.Watch(ctx, "/"+StorePrefix+"/", clientv3.WithPrefix())
 		for {
 			select {
 			case <-ctx.Done():
@@ -44,13 +39,21 @@ func (e *etcdConnect) GetAddress() string {
 
 func (e *etcdConnect) start(ctx context.Context, address string) error {
 	var err error
-	cfg := clientv3.Config{
-		Endpoints: []string{address},
-		//TODO:超时设置
-		DialTimeout: 5 * time.Second,
-		Context:     ctx,
-		Username:    "root",
-		Password:    "t1aZnKJLoR",
+	var cfg clientv3.Config
+	if len(Username) > 0 {
+		cfg = clientv3.Config{
+			Endpoints:   []string{address},
+			DialTimeout: Timeout,
+			Context:     ctx,
+			Username:    Username,
+			Password:    Password,
+		}
+	} else {
+		cfg = clientv3.Config{
+			Endpoints:   []string{address},
+			DialTimeout: Timeout,
+			Context:     ctx,
+		}
 	}
 	e.cli, err = clientv3.New(cfg)
 	if err != nil {
@@ -65,9 +68,9 @@ func (e *etcdConnect) start(ctx context.Context, address string) error {
 	return nil
 }
 
-func NewStorageFunc(ctx context.Context, c *config.Config) ([]watcher.Watcher, error) {
-	storages := make([]watcher.Watcher, len(c.StoreAddress))
-	for i, address := range c.StoreAddress {
+func NewStorageFunc(ctx context.Context, addressSlice []string) ([]watcher.Watcher, error) {
+	storages := make([]watcher.Watcher, len(addressSlice))
+	for i, address := range addressSlice {
 		connect := &etcdConnect{address: address}
 		if err := connect.start(ctx, address); err != nil {
 			return nil, err

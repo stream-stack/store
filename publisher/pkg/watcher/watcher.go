@@ -3,7 +3,6 @@ package watcher
 import (
 	"context"
 	"fmt"
-	"github.com/stream-stack/monitor/pkg/config"
 )
 
 type StoreType string
@@ -16,20 +15,20 @@ func Register(t StoreType, f Factory) {
 
 var WatcherInst Watcher
 
-func Start(ctx context.Context, c *config.Config) error {
+func Start(ctx context.Context) error {
 	//leader 选举
 	//连接后端
-	factory, ok := factoryMap[StoreType(c.StoreType)]
+	factory, ok := factoryMap[StoreType(StoreTypeValue)]
 	if !ok {
-		return fmt.Errorf("[storage]not support store type :%v", c.StoreType)
+		return fmt.Errorf("[storage]not support store type :%v", StoreTypeValue)
 	}
-	ss, err := factory(ctx, c)
+	ss, err := factory(ctx, StoreAddressValue)
 	if err != nil {
 		return fmt.Errorf("[storage]init storage error:%v", err)
 	}
 	WatcherInst = &Proxy{
 		backend: ss,
-		address: c.StoreAddress,
+		address: StoreAddressValue,
 	}
 	return WatcherInst.Watch(ctx)
 }

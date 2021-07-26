@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/stream-stack/store/pkg/config"
 	"github.com/stream-stack/store/pkg/proto"
 	"github.com/stream-stack/store/pkg/storage"
 	"github.com/stream-stack/store/pkg/storage/etcd"
@@ -11,24 +10,30 @@ import (
 	"log"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestSave(t *testing.T) {
 	port := "5051"
-	c := &config.Config{
-		GrpcPort:      port,
-		StoreType:     etcd.StoreType,
-		StoreAddress:  []string{"111.231.212.35:2379"},
-		PartitionType: storage.HASHPartitionType,
-	}
+	GrpcPort = port
+
+	storage.StoreAddressValue = []string{"127.0.0.1:2379"}
+	storage.StoreTypeValue = etcd.StoreType
+	storage.PartitionValue = storage.HASHPartitionType
+
+	etcd.InitFlags()
+	etcd.Username = "root"
+	etcd.Password = ""
+	etcd.Timeout = time.Second * 5
+
 	todo := context.TODO()
 	todo, cancelFunc := context.WithCancel(todo)
 	//cluster
-	if err := storage.Start(todo, c); err != nil {
+	if err := storage.Start(todo); err != nil {
 		panic(err)
 	}
 	//grpc server
-	if err := Start(todo, c); err != nil {
+	if err := Start(todo); err != nil {
 		panic(err)
 	}
 
@@ -40,7 +45,7 @@ func TestSave(t *testing.T) {
 		_ = dial.Close()
 	}()
 	cli := proto.NewStorageClient(dial)
-	for i := 300; i < 400; i++ {
+	for i := 1; i < 10; i++ {
 		save, err := cli.Save(todo, &proto.SaveRequest{
 			StreamName: "test",
 			StreamId:   "1",
@@ -59,20 +64,25 @@ func TestSave(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	port := "5051"
-	c := &config.Config{
-		GrpcPort:      port,
-		StoreType:     etcd.StoreType,
-		StoreAddress:  []string{"111.231.212.35:2379"},
-		PartitionType: storage.HASHPartitionType,
-	}
+	GrpcPort = port
+
+	storage.StoreAddressValue = []string{"127.0.0.1:2379"}
+	storage.StoreTypeValue = etcd.StoreType
+	storage.PartitionValue = storage.HASHPartitionType
+
+	etcd.InitFlags()
+	etcd.Username = "root"
+	etcd.Password = ""
+	etcd.Timeout = time.Second * 5
+
 	todo := context.TODO()
 	todo, cancelFunc := context.WithCancel(todo)
 	//cluster
-	if err := storage.Start(todo, c); err != nil {
+	if err := storage.Start(todo); err != nil {
 		panic(err)
 	}
 	//grpc server
-	if err := Start(todo, c); err != nil {
+	if err := Start(todo); err != nil {
 		panic(err)
 	}
 
