@@ -1,4 +1,4 @@
-module github.com/stream-stack/monitor
+module github.com/stream-stack/publisher
 
 go 1.16
 

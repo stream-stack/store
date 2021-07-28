@@ -2,22 +2,26 @@ package etcd
 
 import (
 	"context"
+	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/stream-stack/monitor/pkg/watcher"
+	"github.com/stream-stack/publisher/pkg/proto"
+	"github.com/stream-stack/publisher/pkg/publisher"
+	"github.com/stream-stack/publisher/pkg/watcher"
 	"log"
 )
 
-const StoreType = "ETCD"
-const StorePrefix = "stream"
+const BackendType = "ETCD"
+const BackendPrefix = "stream"
 
 type etcdConnect struct {
 	address string
 	cli     *clientv3.Client
 }
 
-func (e *etcdConnect) Watch(ctx context.Context) error {
+func (e *etcdConnect) Watch(ctx context.Context, in chan<- proto.SaveRequest, point publisher.StartPoint) error {
 	go func() {
-		watch := e.cli.Watch(ctx, "/"+StorePrefix+"/", clientv3.WithPrefix())
+		//TODO:使用startpoint
+		watch := e.cli.Watch(ctx, "/"+BackendPrefix+"/", clientv3.WithPrefix(), clientv3.WithRev(0))
 		for {
 			select {
 			case <-ctx.Done():
@@ -25,10 +29,21 @@ func (e *etcdConnect) Watch(ctx context.Context) error {
 			case response := <-watch:
 				for _, event := range response.Events {
 					log.Printf("[watcher]收到事件,%v,%v,%v", event.Type, string(event.Kv.Key), string(event.Kv.Value))
+					var name, sid, id string
+					_, err := fmt.Sscanf(string(event.Kv.Key), "/"+BackendPrefix+"/%s/%s/%s", &name, &sid, &id)
+					if err != nil {
+						log.Printf("[watcher]解析key:%s,错误:%v", string(event.Kv.Key), err)
+						continue
+					}
+					in <- proto.SaveRequest{
+						StreamName: name,
+						StreamId:   sid,
+						EventId:    id,
+						Data:       event.Kv.Value,
+					}
 				}
 			}
 		}
-
 	}()
 	return nil
 }

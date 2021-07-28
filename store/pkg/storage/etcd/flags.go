@@ -8,11 +8,10 @@ import (
 )
 
 func InitFlags() {
-	storage.Register(StoreType, NewStorageFunc)
+	storage.Register(BackendType, NewStorageFunc)
 
 	config.RegisterFlags(func(command *cobra.Command) {
-		command.PersistentFlags().StringVar(&storage.StoreTypeValue, "StoreType", StoreType, "store type")
-		command.PersistentFlags().StringSliceVar(&storage.StoreAddressValue, "StoreAddress", []string{"127.0.0.1:2379"}, "store address")
+		command.PersistentFlags().StringVar(&storage.BackendTypeValue, "BackendType", BackendType, "store type")
 
 		command.PersistentFlags().StringVar(&Username, "EtcdUsername", "", "etcd Username")
 		command.PersistentFlags().StringVar(&Password, "EtcdPassword", "", "etcd Password")

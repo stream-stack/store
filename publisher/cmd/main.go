@@ -4,9 +4,10 @@ import (
 	"context"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/stream-stack/monitor/pkg/config"
-	"github.com/stream-stack/monitor/pkg/watcher"
-	"github.com/stream-stack/monitor/pkg/watcher/etcd"
+	etcd2 "github.com/stream-stack/publisher/pkg/backend/etcd"
+	"github.com/stream-stack/publisher/pkg/config"
+	"github.com/stream-stack/publisher/pkg/publisher"
+	"github.com/stream-stack/publisher/pkg/watcher"
 	"os"
 	"os/signal"
 )
@@ -28,6 +29,9 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := publisher.Start(ctx); err != nil {
+				return err
+			}
 			//watcher
 			if err := watcher.Start(ctx); err != nil {
 				return err
@@ -37,8 +41,9 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 			return nil
 		},
 	}
+	publisher.InitFlags()
 	watcher.InitFlags()
-	etcd.InitFlags()
+	etcd2.InitFlags()
 
 	viper.AutomaticEnv()
 	viper.AddConfigPath(`.`)

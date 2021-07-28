@@ -23,7 +23,7 @@ func Start(ctx context.Context) error {
 	var err error
 	switch PartitionValue {
 	case HASHPartitionType:
-		p, err = HashPartitionFuncFactory(ctx, StoreAddressValue)
+		p, err = HashPartitionFuncFactory(ctx, BackendAddressValue)
 		if err != nil {
 			return fmt.Errorf("[storage]init PartitionFunc error:%v", err)
 		}
@@ -32,18 +32,18 @@ func Start(ctx context.Context) error {
 	}
 
 	//连接后端
-	factory, ok := storeFactoryMap[StoreType(StoreTypeValue)]
+	factory, ok := storeFactoryMap[StoreType(BackendTypeValue)]
 	if !ok {
-		return fmt.Errorf("[storage]not support store type :%v", StoreTypeValue)
+		return fmt.Errorf("[storage]not support store type :%v", BackendTypeValue)
 	}
-	ss, err := factory(ctx, StoreAddressValue)
+	ss, err := factory(ctx, BackendAddressValue)
 	if err != nil {
 		return fmt.Errorf("[storage]init storage error:%v", err)
 	}
 	SaveStorage = &Proxy{
 		backend:       ss,
 		partitionFunc: p,
-		address:       StoreAddressValue,
+		address:       BackendAddressValue,
 	}
 	return nil
 }

@@ -14,16 +14,16 @@ import (
 )
 
 func TestSave(t *testing.T) {
-	port := "5051"
+	port := "5001"
 	GrpcPort = port
 
-	storage.StoreAddressValue = []string{"127.0.0.1:2379"}
-	storage.StoreTypeValue = etcd.StoreType
+	storage.BackendAddressValue = []string{"139.155.161.172:2379"}
+	storage.BackendTypeValue = etcd.BackendType
 	storage.PartitionValue = storage.HASHPartitionType
 
 	etcd.InitFlags()
 	etcd.Username = "root"
-	etcd.Password = ""
+	etcd.Password = "i6n629GqcE"
 	etcd.Timeout = time.Second * 5
 
 	todo := context.TODO()
@@ -66,8 +66,8 @@ func TestGet(t *testing.T) {
 	port := "5051"
 	GrpcPort = port
 
-	storage.StoreAddressValue = []string{"127.0.0.1:2379"}
-	storage.StoreTypeValue = etcd.StoreType
+	storage.BackendAddressValue = []string{"127.0.0.1:2379"}
+	storage.BackendTypeValue = etcd.BackendType
 	storage.PartitionValue = storage.HASHPartitionType
 
 	etcd.InitFlags()

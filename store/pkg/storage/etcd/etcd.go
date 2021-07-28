@@ -9,7 +9,7 @@ import (
 	"reflect"
 )
 
-const StoreType = "ETCD"
+const BackendType = "ETCD"
 const StorePrefix = "stream"
 
 type etcdConnect struct {
@@ -85,6 +85,7 @@ func (e *etcdConnect) GetAddress() string {
 }
 
 func (e *etcdConnect) start(ctx context.Context, address string) error {
+	log.Printf("[etcd]start etcd,params[address:%v,username:%v,password:%v]", address, Username, Password)
 	var cfg clientv3.Config
 	if len(Username) > 0 {
 		cfg = clientv3.Config{
