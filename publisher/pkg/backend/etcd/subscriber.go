@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"github.com/stream-stack/publisher/pkg/proto"
 	"github.com/stream-stack/publisher/pkg/publisher"
@@ -25,6 +26,18 @@ func NewSubscribeManagerFunc(ctx context.Context, storeAddress string) (publishe
 
 type SubscribeManagerImpl struct {
 	grpcClient proto.StorageClient
+}
+
+func (e *SubscribeManagerImpl) LoadStreamSnapshot(ctx context.Context, streamName string, StreamId string) ([]byte, error) {
+	get, err := e.grpcClient.Get(ctx, &proto.GetRequest{
+		StreamName: streamName,
+		StreamId:   StreamId,
+		EventId:    publisher.LastEvent,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return get.Data, nil
 }
 
 const SubscribeEventAdd = "ADD"
@@ -73,33 +86,46 @@ func (e *SubscribeManagerImpl) LoadAllSubscribe(ctx context.Context) (publisher.
 		return nil, err
 	}
 	dataSlice[lastEventId] = s
-	rebuildSubscribeMap(dataSlice)
+	err = rebuildSubscribeMap(ctx, dataSlice, e)
+	if err != nil {
+		return nil, err
+	}
 
-	//map 转list
+	return map2list(subscribeMap), nil
+}
 
-	return subscribeMap, nil
+func map2list(m map[string]*publisher.Subscriber) publisher.SubscriberList {
+	subscribers := make([]*publisher.Subscriber, len(m))
+	i := 0
+	for _, subscriber := range m {
+		subscribers[i] = subscriber
+		i++
+	}
+	return subscribers
 }
 
 var subscribeMap = make(map[string]*publisher.Subscriber)
 
-func rebuildSubscribeMap(datas []*SubscribeEvent) {
+func rebuildSubscribeMap(ctx context.Context, datas []*SubscribeEvent, e *SubscribeManagerImpl) error {
 	subscribeMap = make(map[string]*publisher.Subscriber)
 	for _, d := range datas {
 		switch d.Operation {
 		case SubscribeEventAdd:
-			subscribeMap[d.Name] = NewSubscriber(d)
+			subscribeMap[d.Name] = publisher.NewUrlSubscriber(d.Name, d.Pattern, d.Url, nil)
 		case SubscribeEventRemove:
 			delete(subscribeMap, d.Name)
 		}
 	}
-}
-
-func NewSubscriber(d *SubscribeEvent) *publisher.Subscriber {
-	return &publisher.Subscriber{
-		Name:    d.Name,
-		Pattern: d.Pattern,
-		Url:     d.Url,
-		//TODO:获取startPoint
-		//StartPoint: ,
+	for _, subscriber := range subscribeMap {
+		snapshot, err := e.LoadStreamSnapshot(ctx, "subscribe_snapshot", subscriber.Name)
+		if err != nil {
+			return err
+		}
+		m := make(map[string]publisher.UIntStartPoint)
+		if err = json.Unmarshal(snapshot, &m); err != nil {
+			return err
+		}
+		subscriber.StartPoint = publisher.UIntStartPoint{Point: }
 	}
+	return nil
 }
