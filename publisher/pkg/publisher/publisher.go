@@ -2,7 +2,6 @@ package publisher
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/stream-stack/publisher/pkg/proto"
 	"log"
@@ -42,11 +41,11 @@ func Start(ctx context.Context) error {
 		}
 	}
 	//加载overview stream
-	data, err := ss.LoadStreamSnapshot(ctx, "_System", "stream_overview")
+	point, err := ss.LoadStreamStartPoint(ctx, "system", "stream_overview")
 	if err != nil {
 		return err
 	}
-	systemSubscribe, err := newSystemStreamOverview(data)
+	systemSubscribe, err := newSystemStreamOverview(point)
 	if err != nil {
 		return err
 	}
@@ -62,15 +61,11 @@ func Start(ctx context.Context) error {
 	return nil
 }
 
-func newSystemStreamOverview(data []byte) (*Subscriber, error) {
-	if data == nil {
+func newSystemStreamOverview(point StartPoint) (*Subscriber, error) {
+	if point == nil {
 		return newStreamOverview(&BeginStartPoint{}), nil
 	}
-	overview := &StreamOverview{}
-	if err := json.Unmarshal(data, overview); err != nil {
-		return newStreamOverview(&BeginStartPoint{}), err
-	}
-	return newStreamOverview(overview.minPoint()), nil
+	return newStreamOverview(point), nil
 }
 
 var In chan proto.SaveRequest

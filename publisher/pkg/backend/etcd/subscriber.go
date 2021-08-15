@@ -2,7 +2,6 @@ package etcd
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"github.com/stream-stack/publisher/pkg/proto"
 	"github.com/stream-stack/publisher/pkg/publisher"
@@ -28,7 +27,7 @@ type SubscribeManagerImpl struct {
 	grpcClient proto.StorageClient
 }
 
-func (e *SubscribeManagerImpl) LoadStreamSnapshot(ctx context.Context, streamName string, StreamId string) ([]byte, error) {
+func (e *SubscribeManagerImpl) LoadStreamStartPoint(ctx context.Context, streamName string, StreamId string) (publisher.StartPoint, error) {
 	get, err := e.grpcClient.Get(ctx, &proto.GetRequest{
 		StreamName: streamName,
 		StreamId:   StreamId,
@@ -37,17 +36,11 @@ func (e *SubscribeManagerImpl) LoadStreamSnapshot(ctx context.Context, streamNam
 	if err != nil {
 		return nil, err
 	}
-	return get.Data, nil
-}
-
-const SubscribeEventAdd = "ADD"
-const SubscribeEventRemove = "REMOVE"
-
-type SubscribeEvent struct {
-	Operation string `json:"operation"`
-	Name      string `json:"name"`
-	Pattern   string `json:"pattern"`
-	Url       string `json:"url"`
+	m := make(map[string]uint64)
+	if err = json.Unmarshal(get.Data, &m); err != nil {
+		return nil, err
+	}
+	return etcdStartPoint(m), nil
 }
 
 func (e *SubscribeManagerImpl) LoadAllSubscribe(ctx context.Context) (publisher.SubscriberList, error) {
@@ -117,15 +110,11 @@ func rebuildSubscribeMap(ctx context.Context, datas []*SubscribeEvent, e *Subscr
 		}
 	}
 	for _, subscriber := range subscribeMap {
-		snapshot, err := e.LoadStreamSnapshot(ctx, "subscribe_snapshot", subscriber.Name)
+		point, err := e.LoadStreamStartPoint(ctx, "subscribe_snapshot", subscriber.Name)
 		if err != nil {
 			return err
 		}
-		m := make(map[string]publisher.UIntStartPoint)
-		if err = json.Unmarshal(snapshot, &m); err != nil {
-			return err
-		}
-		subscriber.StartPoint = publisher.UIntStartPoint{Point: }
+		subscriber.StartPoint = point
 	}
 	return nil
 }

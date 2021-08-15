@@ -2,12 +2,11 @@ package publisher
 
 import (
 	"context"
-	"fmt"
 )
 
 type SubscribeManager interface {
 	LoadAllSubscribe(ctx context.Context) (SubscriberList, error)
-	LoadStreamSnapshot(ctx context.Context, streamName string, StreamId string) ([]byte, error)
+	LoadStreamStartPoint(ctx context.Context, streamName string, StreamId string) (StartPoint, error)
 }
 
 type SubscribeManagerFactory func(ctx context.Context, storeAddress string) (SubscribeManager, error)
@@ -19,30 +18,6 @@ const SubscribeStreamId = "_publisher"
 type StartPoint interface {
 	//0相等，1大于，-1 小于
 	Compare(s StartPoint) int
-}
-
-type MapStartPoint map[string]uint64
-
-func (m MapStartPoint) Compare(s StartPoint) int {
-
-}
-
-type UIntStartPoint struct {
-	Point uint64 `json:"point"`
-}
-
-func (u UIntStartPoint) Compare(s StartPoint) int {
-	point, ok := s.(UIntStartPoint)
-	if !ok {
-		panic(fmt.Errorf("startpoint %+v not type UIntStartPoint", s))
-	}
-	if u.Point > point.Point {
-		return 1
-	}
-	if u.Point < point.Point {
-		return -1
-	}
-	return 0
 }
 
 type BeginStartPoint struct {
