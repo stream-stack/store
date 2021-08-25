@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/stream-stack/store/pkg/proto"
-	"github.com/stream-stack/store/pkg/storage"
+	"github.com/stream-stack/store/store/common/proto"
+	"github.com/stream-stack/store/store/pkg/storage"
 	"google.golang.org/grpc"
 	"log"
 	"net"

@@ -1,4 +1,4 @@
-module github.com/stream-stack/store/publisher
+module github.com/stream-stack/store/store/publisher
 
 go 1.16
 
@@ -43,6 +43,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.3.2
+	github.com/stream-stack/store/store/common v0.0.0-20210825083649-7fd253a4239c // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802 // indirect
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	go.uber.org/zap v1.17.0 // indirect
@@ -61,4 +62,5 @@ require (
 replace (
 	github.com/coreos/bbolt v1.3.6 => go.etcd.io/bbolt v1.3.6
 	google.golang.org/grpc v1.39.0 => google.golang.org/grpc v1.26.0
+	github.com/stream-stack/store/store/common v0.0.0-20210825083649-7fd253a4239c => ../common
 )

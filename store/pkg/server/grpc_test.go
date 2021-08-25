@@ -3,9 +3,10 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/stream-stack/store/pkg/proto"
-	"github.com/stream-stack/store/pkg/storage"
-	"github.com/stream-stack/store/pkg/storage/etcd"
+	"github.com/stream-stack/store/store/common/proto"
+	"github.com/stream-stack/store/store/common/vars"
+	"github.com/stream-stack/store/store/pkg/storage"
+	"github.com/stream-stack/store/store/pkg/storage/etcd"
 	"google.golang.org/grpc"
 	"log"
 	"strconv"
@@ -117,7 +118,7 @@ func TestGet(t *testing.T) {
 	save, err = cli.Get(todo, &proto.GetRequest{
 		StreamName: "test",
 		StreamId:   "1",
-		EventId:    storage.FirstEvent,
+		EventId:    vars.FirstEvent,
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -126,7 +127,7 @@ func TestGet(t *testing.T) {
 	save, err = cli.Get(todo, &proto.GetRequest{
 		StreamName: "test",
 		StreamId:   "1",
-		EventId:    storage.LastEvent,
+		EventId:    vars.LastEvent,
 	})
 	if err != nil {
 		fmt.Println(err)

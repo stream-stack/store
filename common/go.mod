@@ -1,4 +1,4 @@
-module github.com/stream-stack/store/common
+module github.com/stream-stack/store/store/common
 
 go 1.16
 

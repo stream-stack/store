@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"errors"
 )
 
 type Storage interface {
@@ -12,9 +11,3 @@ type Storage interface {
 }
 
 type Factory func(ctx context.Context, addressSlice []string) (Storage, error)
-
-const FirstEvent = "FIRST"
-const LastEvent = "LAST"
-
-var ErrEventNotFound = errors.New("event not found")
-var ErrEventExists = errors.New("event exists")

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/spf13/cobra"
-	"github.com/stream-stack/publisher/pkg/config"
-	"github.com/stream-stack/publisher/pkg/publisher"
+	"github.com/stream-stack/store/store/common/config"
+	"github.com/stream-stack/store/store/publisher/pkg/publisher"
 	"time"
 )
 

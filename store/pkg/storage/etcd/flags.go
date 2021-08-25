@@ -2,8 +2,8 @@ package etcd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/stream-stack/store/pkg/config"
-	"github.com/stream-stack/store/pkg/storage"
+	"github.com/stream-stack/store/store/common/config"
+	"github.com/stream-stack/store/store/pkg/storage"
 	"time"
 )
 

@@ -4,10 +4,9 @@ import (
 	"context"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	etcd2 "github.com/stream-stack/publisher/pkg/backend/etcd"
-	"github.com/stream-stack/publisher/pkg/config"
-	"github.com/stream-stack/publisher/pkg/publisher"
-	"github.com/stream-stack/publisher/pkg/watcher"
+	"github.com/stream-stack/store/store/common/config"
+	etcd2 "github.com/stream-stack/store/store/publisher/pkg/backend/etcd"
+	"github.com/stream-stack/store/store/publisher/pkg/publisher"
 	"os"
 	"os/signal"
 )
@@ -38,7 +37,6 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 		},
 	}
 	publisher.InitFlags()
-	watcher.InitFlags()
 	etcd2.InitFlags()
 
 	viper.AutomaticEnv()

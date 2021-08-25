@@ -3,10 +3,10 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/stream-stack/publisher/pkg/publisher"
+	"github.com/stream-stack/store/store/common/errdef"
+	"github.com/stream-stack/store/store/common/formater"
+	"github.com/stream-stack/store/store/publisher/pkg/publisher"
 	"log"
 	"reflect"
 	"time"
@@ -66,37 +66,24 @@ func (e *etcdSnapshot) GetExtData() []byte {
 	return e.ExtData
 }
 
-const StorePrefix = "stream"
-
-func formatStreamInfo(name string, id string) string {
-	return fmt.Sprintf("/%s/%s/%s/", StorePrefix, name, id)
-}
-
-var ErrEventNotFound = errors.New("event not found")
-var ErrEventExists = errors.New("event exists")
-
-func formatKey(streamName, streamId, eventId string) string {
-	return fmt.Sprintf("/%s/%s/%s/%s", StorePrefix, streamName, streamId, eventId)
-}
-
 func (s *SubscribeManagerImpl) LoadSnapshot(ctx context.Context, streamName string, streamId string) (publisher.Snapshot, error) {
 	var key string
 	var err error
 	var getResp *clientv3.GetResponse
-	key = formatStreamInfo(streamName, streamId)
+	key = formater.FormatStreamInfo(streamName, streamId)
 	getResp, err = s.etcdClient.Get(ctx, key, clientv3.WithSort(clientv3.SortByCreateRevision, clientv3.SortDescend),
 		clientv3.WithPrefix(), clientv3.WithLimit(1))
 	if err != nil {
 		return nil, err
 	}
 	if getResp.Kvs == nil || len(getResp.Kvs) == 0 {
-		return nil, ErrEventNotFound
+		return nil, errdef.ErrEventNotFound
 	}
 	if getResp.Kvs == nil {
 	}
 	value := getResp.Kvs[0]
 	if value.CreateRevision == 0 {
-		return nil, ErrEventNotFound
+		return nil, errdef.ErrEventNotFound
 	}
 
 	snapshot := &etcdSnapshot{}
@@ -108,7 +95,7 @@ func (s *SubscribeManagerImpl) LoadSnapshot(ctx context.Context, streamName stri
 }
 
 func (s *SubscribeManagerImpl) SaveSnapshot(ctx context.Context, streamName string, streamId string, data []byte) error {
-	key := formatKey(streamName, streamId, time.Now().String())
+	key := formater.FormatKey(streamName, streamId, time.Now().String())
 	value := string(data)
 	timeout, cancelFunc := context.WithTimeout(ctx, Timeout)
 	defer cancelFunc()
@@ -124,7 +111,7 @@ func (s *SubscribeManagerImpl) SaveSnapshot(ctx context.Context, streamName stri
 		log.Printf("[etcd]key exist, get key value response:%+v", commit.OpResponse().Txn().Responses[0])
 		log.Printf("[etcd]data是否相等:%v \n", reflect.DeepEqual(commit.OpResponse().Txn().Responses[0].GetResponseRange().Kvs[0].Value, data))
 		if !reflect.DeepEqual(commit.OpResponse().Txn().Responses[0].GetResponseRange().Kvs[0].Value, data) {
-			return ErrEventExists
+			return errdef.ErrEventExists
 		}
 	}
 	return nil

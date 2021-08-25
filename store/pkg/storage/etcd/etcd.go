@@ -2,16 +2,17 @@ package etcd
 
 import (
 	"context"
-	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/stream-stack/store/pkg/storage"
+	"github.com/stream-stack/store/store/common/errdef"
+	"github.com/stream-stack/store/store/common/formater"
+	"github.com/stream-stack/store/store/common/vars"
+	"github.com/stream-stack/store/store/pkg/storage"
 	"log"
 	"reflect"
 	"strings"
 )
 
 const BackendType = "ETCD"
-const StorePrefix = "stream"
 
 type etcdConnect struct {
 	cli          *clientv3.Client
@@ -23,39 +24,35 @@ func (e *etcdConnect) Get(ctx context.Context, streamName, streamId, eventId str
 	var err error
 	var getResp *clientv3.GetResponse
 	switch eventId {
-	case storage.FirstEvent:
-		key = formatStreamInfo(streamName, streamId)
+	case vars.FirstEvent:
+		key = formater.FormatStreamInfo(streamName, streamId)
 		getResp, err = e.cli.Get(ctx, key, clientv3.WithSort(clientv3.SortByCreateRevision, clientv3.SortAscend),
 			clientv3.WithPrefix(), clientv3.WithLimit(1))
-	case storage.LastEvent:
-		key = formatStreamInfo(streamName, streamId)
+	case vars.LastEvent:
+		key = formater.FormatStreamInfo(streamName, streamId)
 		getResp, err = e.cli.Get(ctx, key, clientv3.WithSort(clientv3.SortByCreateRevision, clientv3.SortDescend),
 			clientv3.WithPrefix(), clientv3.WithLimit(1))
 	default:
-		getResp, err = e.cli.Get(ctx, formatKey(streamName, streamId, eventId))
+		getResp, err = e.cli.Get(ctx, formater.FormatKey(streamName, streamId, eventId))
 	}
 
 	if err != nil {
 		return nil, err
 	}
 	if getResp.Kvs == nil || len(getResp.Kvs) == 0 {
-		return nil, storage.ErrEventNotFound
+		return nil, errdef.ErrEventNotFound
 	}
 	if getResp.Kvs == nil {
 	}
 	value := getResp.Kvs[0]
 	if value.CreateRevision == 0 {
-		return nil, storage.ErrEventNotFound
+		return nil, errdef.ErrEventNotFound
 	}
 	return value.Value, nil
 }
 
-func formatStreamInfo(name string, id string) string {
-	return fmt.Sprintf("/%s/%s/%s/", StorePrefix, name, id)
-}
-
 func (e *etcdConnect) Save(ctx context.Context, streamName, streamId, eventId string, data []byte) error {
-	key := formatKey(streamName, streamId, eventId)
+	key := formater.FormatKey(streamName, streamId, eventId)
 	value := string(data)
 	timeout, cancelFunc := context.WithTimeout(ctx, Timeout)
 	defer cancelFunc()
@@ -71,14 +68,10 @@ func (e *etcdConnect) Save(ctx context.Context, streamName, streamId, eventId st
 		log.Printf("[etcd]key exist, get key value response:%+v", commit.OpResponse().Txn().Responses[0])
 		log.Printf("[etcd]data是否相等:%v \n", reflect.DeepEqual(commit.OpResponse().Txn().Responses[0].GetResponseRange().Kvs[0].Value, data))
 		if !reflect.DeepEqual(commit.OpResponse().Txn().Responses[0].GetResponseRange().Kvs[0].Value, data) {
-			return storage.ErrEventExists
+			return errdef.ErrEventExists
 		}
 	}
 	return nil
-}
-
-func formatKey(streamName, streamId, eventId string) string {
-	return fmt.Sprintf("/%s/%s/%s/%s", StorePrefix, streamName, streamId, eventId)
 }
 
 func (e *etcdConnect) GetAddress() string {
