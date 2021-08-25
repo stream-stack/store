@@ -1,4 +1,4 @@
-module github.com/stream-stack/publisher
+module github.com/stream-stack/store/publisher
 
 go 1.16
 
