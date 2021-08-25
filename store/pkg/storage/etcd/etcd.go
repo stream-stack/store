@@ -7,14 +7,15 @@ import (
 	"github.com/stream-stack/store/pkg/storage"
 	"log"
 	"reflect"
+	"strings"
 )
 
 const BackendType = "ETCD"
 const StorePrefix = "stream"
 
 type etcdConnect struct {
-	address string
-	cli     *clientv3.Client
+	cli          *clientv3.Client
+	addressSlice []string
 }
 
 func (e *etcdConnect) Get(ctx context.Context, streamName, streamId, eventId string) ([]byte, error) {
@@ -81,15 +82,15 @@ func formatKey(streamName, streamId, eventId string) string {
 }
 
 func (e *etcdConnect) GetAddress() string {
-	return e.address
+	return strings.Join(e.addressSlice, ",")
 }
 
-func (e *etcdConnect) start(ctx context.Context, address string) error {
-	log.Printf("[etcd]start etcd,params[address:%v,username:%v,password:%v]", address, Username, Password)
+func (e *etcdConnect) start(ctx context.Context) error {
+	log.Printf("[etcd]start etcd,params[address:%v,username:%v,password:%v]", e.addressSlice, Username, Password)
 	var cfg clientv3.Config
 	if len(Username) > 0 {
 		cfg = clientv3.Config{
-			Endpoints:   []string{address},
+			Endpoints:   e.addressSlice,
 			DialTimeout: Timeout,
 			Context:     ctx,
 			Username:    Username,
@@ -97,7 +98,7 @@ func (e *etcdConnect) start(ctx context.Context, address string) error {
 		}
 	} else {
 		cfg = clientv3.Config{
-			Endpoints:   []string{address},
+			Endpoints:   e.addressSlice,
 			DialTimeout: Timeout,
 			Context:     ctx,
 		}
@@ -116,14 +117,10 @@ func (e *etcdConnect) start(ctx context.Context, address string) error {
 	return nil
 }
 
-func NewStorageFunc(ctx context.Context, addressSlice []string) ([]storage.Storage, error) {
-	storages := make([]storage.Storage, len(addressSlice))
-	for i, address := range addressSlice {
-		connect := &etcdConnect{address: address}
-		if err := connect.start(ctx, address); err != nil {
-			return nil, err
-		}
-		storages[i] = connect
+func NewStorageFunc(ctx context.Context, addressSlice []string) (storage.Storage, error) {
+	connect := &etcdConnect{addressSlice: addressSlice}
+	if err := connect.start(ctx); err != nil {
+		return nil, err
 	}
-	return storages, nil
+	return connect, nil
 }

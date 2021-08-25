@@ -11,7 +11,7 @@ type Storage interface {
 	Get(ctx context.Context, streamName, streamId, eventId string) ([]byte, error)
 }
 
-type Factory func(ctx context.Context, addressSlice []string) ([]Storage, error)
+type Factory func(ctx context.Context, addressSlice []string) (Storage, error)
 
 const FirstEvent = "FIRST"
 const LastEvent = "LAST"
