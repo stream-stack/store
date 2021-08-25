@@ -19,7 +19,6 @@ func TestSave(t *testing.T) {
 
 	storage.BackendAddressValue = []string{"139.155.161.172:2379"}
 	storage.BackendTypeValue = etcd.BackendType
-	storage.PartitionValue = storage.HASHPartitionType
 
 	etcd.InitFlags()
 	etcd.Username = "root"
@@ -68,7 +67,6 @@ func TestGet(t *testing.T) {
 
 	storage.BackendAddressValue = []string{"127.0.0.1:2379"}
 	storage.BackendTypeValue = etcd.BackendType
-	storage.PartitionValue = storage.HASHPartitionType
 
 	etcd.InitFlags()
 	etcd.Username = "root"

@@ -32,10 +32,6 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 			if err := publisher.Start(ctx); err != nil {
 				return err
 			}
-			//watcher
-			if err := watcher.Start(ctx); err != nil {
-				return err
-			}
 
 			<-ctx.Done()
 			return nil

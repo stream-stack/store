@@ -3,9 +3,7 @@ package publisher
 import (
 	"context"
 	"fmt"
-	"github.com/stream-stack/publisher/pkg/proto"
-	"log"
-	"sort"
+	"time"
 )
 
 type BackendType string
@@ -16,79 +14,46 @@ func Register(t BackendType, f SubscribeManagerFactory) {
 	factoryMap[t] = f
 }
 
-var WatchStartPoint StartPoint
-var subscribers SubscriberList
+var eventUnmarshalMap = make(map[BackendType]EventUnmarshaler)
 
-//TODO:订阅快照实现
+func RegisterEventUnmarshal(t BackendType, f EventUnmarshaler) {
+	eventUnmarshalMap[t] = f
+}
+
+var dataUnmarshalMap = make(map[BackendType]DataUnmarshaler)
+
+func RegisterExtDataUnmarshal(t BackendType, f DataUnmarshaler) {
+	dataUnmarshalMap[t] = f
+}
+
+type action func(ctx context.Context, event SubscribeEvent, data interface{}, pushSetting SubscribePushSetting) error
+
+type DataUnmarshaler func(data []byte) (interface{}, error)
+
+var ss SubscribeManager
+var eu EventUnmarshaler
+var du DataUnmarshaler
+
 func Start(ctx context.Context) error {
+	var err error
 	factory, ok := factoryMap[BackendType(BackendTypeValue)]
 	if !ok {
 		return fmt.Errorf("[publisher]not support store type :%v", BackendTypeValue)
 	}
-	ss, err := factory(ctx, StoreAddress)
+	eu, ok = eventUnmarshalMap[BackendType(BackendTypeValue)]
+	if !ok {
+		return fmt.Errorf("[publisher]not support eventUnmarshaler store type :%v", BackendTypeValue)
+	}
+	du, ok = dataUnmarshalMap[BackendType(BackendTypeValue)]
+	if !ok {
+		return fmt.Errorf("[publisher]not support DataUnmarshaler store type :%v", BackendTypeValue)
+	}
+
+	ss, err = factory(ctx, BackendAddressValue)
 	if err != nil {
 		return fmt.Errorf("[publisher]init storage error:%v", err)
 	}
-	subscribers, err = ss.LoadAllSubscribe(ctx)
-	if err != nil {
-		return err
-	}
-	for _, subscriber := range subscribers {
-		err = subscriber.init()
-		if err != nil {
-			log.Printf("[publisher]subscribe init error:%v", err)
-			continue
-		}
-	}
-	//加载overview stream
-	point, err := ss.LoadStreamStartPoint(ctx, "system", "stream_overview")
-	if err != nil {
-		return err
-	}
-	systemSubscribe, err := newSystemStreamOverview(point)
-	if err != nil {
-		return err
-	}
-	subscribers = append(subscribers, systemSubscribe)
-	if len(subscribers) == 0 {
-		WatchStartPoint = &CurrentStartPoint{}
-	} else {
-		sort.Sort(subscribers)
-		WatchStartPoint = subscribers[0].StartPoint
-	}
-
-	startPublisher(ctx)
-	return nil
-}
-
-func newSystemStreamOverview(point StartPoint) (*Subscriber, error) {
-	if point == nil {
-		return newStreamOverview(&BeginStartPoint{}), nil
-	}
-	return newStreamOverview(point), nil
-}
-
-var In chan proto.SaveRequest
-
-func startPublisher(ctx context.Context) {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case e := <-In:
-				for _, val := range subscribers {
-					//go func(val *SubscribeEvent) {
-					if val.Match(GetKey(e)) {
-						val.DoAction(e)
-					}
-					//}(val)
-				}
-			}
-		}
-	}()
-}
-
-func GetKey(e proto.SaveRequest) string {
-	return fmt.Sprintf("%s/%s/%s", e.StreamName, e.StreamId, e.EventId)
+	runner := NewSubscribeRunner(ctx, ss, systemDataUnmarshaler, eu, "system", "snapshot",
+		"system_subscribe", "system/subscribe", systemAction, time.Minute)
+	return runner.start()
 }
