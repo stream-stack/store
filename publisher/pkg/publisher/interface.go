@@ -2,11 +2,13 @@ package publisher
 
 import (
 	"context"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"time"
 )
 
 type SubscribeEvent interface {
 	GetStartPoint() StartPoint
+	GetCloudEvent() cloudevents.Event
 }
 
 type SubscribeManager interface {
@@ -31,9 +33,9 @@ type Subscriber interface {
 }
 
 type SubscribePushSetting struct {
-	Url         string        `json:"url"`
-	ErrIdle     time.Duration `json:"err_idle"`
-	MaxErrCount uint8         `json:"max_err_count"`
+	Url                  string        `json:"url"`
+	MaxRequestDuration   time.Duration `json:"max_request_duration"`
+	MaxRequestRetryCount int           `json:"max_request_retry_count"`
 }
 
 type SubscribeSaveSetting struct {
@@ -43,7 +45,7 @@ type SubscribeSaveSetting struct {
 type BaseSubscribe struct {
 	Name                 string     `json:"name"`
 	StartPoint           StartPoint `json:"start_point"`
-	Key                  string     `json:"key"`
+	Key                  string     `json:"watchKey"`
 	SubscribePushSetting `json:"-"`
 	SubscribeSaveSetting `json:"-"`
 

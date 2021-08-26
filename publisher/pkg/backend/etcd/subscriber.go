@@ -46,26 +46,6 @@ type SubscribeManagerImpl struct {
 	etcdClient *clientv3.Client
 }
 
-type etcdSnapshot struct {
-	//快照创建位置
-	StartPoint uint64 `json:"start_point"`
-	//扩展数据
-	ExtData []byte `json:"ext_data"`
-}
-
-func (e *etcdSnapshot) SetStartPoint(i publisher.StartPoint) {
-	u := i.(uint64)
-	e.StartPoint = u
-}
-
-func (e *etcdSnapshot) GetStartPoint() publisher.StartPoint {
-	return e.StartPoint
-}
-
-func (e *etcdSnapshot) GetExtData() []byte {
-	return e.ExtData
-}
-
 func (s *SubscribeManagerImpl) LoadSnapshot(ctx context.Context, streamName string, streamId string) (publisher.Snapshot, error) {
 	var key string
 	var err error

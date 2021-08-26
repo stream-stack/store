@@ -10,29 +10,29 @@ import (
 var runners = make(map[string]*SubscribeRunner)
 
 type SubscribeRunner struct {
-	ctx                             context.Context
-	ss                              SubscribeManager
-	dataUnmarshaler                 DataUnmarshaler
-	eventUnmarshaler                EventUnmarshaler
-	name, streamName, streamId, key string
-	action                          action
-	cancelFunc                      context.CancelFunc
-	subCtx                          context.Context
-	pushSetting                     SubscribePushSetting
-	saveInterval                    time.Duration
+	ctx                                  context.Context
+	ss                                   SubscribeManager
+	dataUnmarshaler                      DataUnmarshaler
+	eventUnmarshaler                     EventUnmarshaler
+	name, streamName, streamId, watchKey string
+	action                               action
+	cancelFunc                           context.CancelFunc
+	subCtx                               context.Context
+	pushSetting                          SubscribePushSetting
+	saveInterval                         time.Duration
 }
 
 func NewSubscribeRunner(ctx context.Context, ss SubscribeManager, dataUnmarshaler DataUnmarshaler, eventUnmarshaler EventUnmarshaler, name string,
 	streamName string, streamId string, key string, action action, saveInterval time.Duration) *SubscribeRunner {
 	return &SubscribeRunner{ctx: ctx, ss: ss, dataUnmarshaler: dataUnmarshaler, eventUnmarshaler: eventUnmarshaler,
-		name: name, streamName: streamName, streamId: streamId, key: key, action: action, saveInterval: saveInterval}
+		name: name, streamName: streamName, streamId: streamId, watchKey: key, action: action, saveInterval: saveInterval}
 }
 func NewSubscribeRunnerWithSubscribeOperation(s *BaseSubscribe) *SubscribeRunner {
 	return &SubscribeRunner{ctx: s.ctx, ss: s.subscribeManager,
 		dataUnmarshaler: du, eventUnmarshaler: eu,
 		//"snapshot", "xxx"
 		name: s.Name, streamName: "snapshot", streamId: s.Name,
-		key: s.Key, action: pushCloudEvent, pushSetting: s.SubscribePushSetting, saveInterval: s.Interval}
+		watchKey: s.Key, action: pushCloudEvent, pushSetting: s.SubscribePushSetting, saveInterval: s.Interval}
 }
 
 func (r *SubscribeRunner) start() error {
@@ -45,7 +45,7 @@ func (r *SubscribeRunner) start() error {
 	}
 	data, err := r.dataUnmarshaler(sn.GetExtData())
 
-	watch, err := r.ss.Watch(subCtx, sn.GetStartPoint(), r.key, r.eventUnmarshaler)
+	watch, err := r.ss.Watch(subCtx, sn.GetStartPoint(), r.watchKey, r.eventUnmarshaler)
 	if err != nil {
 		return err
 	}
@@ -64,9 +64,8 @@ func (r *SubscribeRunner) start() error {
 				return
 			case event := <-watch:
 				sn.SetStartPoint(event.GetStartPoint())
-				for err := r.action(r.subCtx, event, data, r.pushSetting); err != nil; {
-					log.Printf("[subscribe-runner]runner %v do action error:%v", r.key, err)
-					time.Sleep(r.pushSetting.ErrIdle)
+				if err := r.action(r.subCtx, event, data, r.pushSetting); err != nil {
+					log.Printf("[subscribe-runner]runner %v do action error:%v", r.watchKey, err)
 				}
 			}
 		}
@@ -81,11 +80,11 @@ func (r *SubscribeRunner) start() error {
 			case <-ticker.C:
 				marshal, err := json.Marshal(sn)
 				if err != nil {
-					log.Printf("[subscribe-runner]runner %v marshal snapshot error:%v", r.key, err)
+					log.Printf("[subscribe-runner]runner %v marshal snapshot error:%v", r.watchKey, err)
 				}
 				err = ss.SaveSnapshot(subCtx, r.streamName, r.streamId, marshal)
 				if err != nil {
-					log.Printf("[subscribe-runner]runner %v save snapshot data error:%v", r.key, err)
+					log.Printf("[subscribe-runner]runner %v save snapshot data error:%v", r.watchKey, err)
 				}
 			}
 		}
