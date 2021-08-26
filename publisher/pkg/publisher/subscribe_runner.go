@@ -81,6 +81,7 @@ func (r *SubscribeRunner) start() error {
 				marshal, err := json.Marshal(sn)
 				if err != nil {
 					log.Printf("[subscribe-runner]runner %v marshal snapshot error:%v", r.watchKey, err)
+					continue
 				}
 				err = ss.SaveSnapshot(subCtx, r.streamName, r.streamId, marshal)
 				if err != nil {
