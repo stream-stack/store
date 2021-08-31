@@ -24,6 +24,7 @@ require (
 	google.golang.org/appengine v1.4.0 // indirect
 	google.golang.org/protobuf v1.26.0-rc.1
 	honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc // indirect
+	google.golang.org/grpc v1.27.0
 )
 
 replace (
@@ -31,5 +32,5 @@ replace (
 	//google.golang.org/grpc v1.39.0 => google.golang.org/grpc v1.26.0
 	github.com/coreos/etcd => github.com/ozonru/etcd v3.3.20-grpc1.27-origmodule+incompatible
 	//google.golang.org/grpc => google.golang.org/grpc v1.27.0
-	google.golang.org/grpc => google.golang.org/grpc v1.33.2
+	//google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
