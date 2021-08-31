@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/stream-stack/store/store/common/proto"
-	"github.com/stream-stack/store/store/pkg/storage"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -12,39 +11,11 @@ import (
 	_ "net/http/pprof"
 )
 
-type StorageService struct {
-}
-
-func (s *StorageService) Get(ctx context.Context, request *proto.GetRequest) (*proto.GetResponse, error) {
-	data, err := storage.SaveStorage.Get(ctx, request.StreamName, request.StreamId, request.EventId)
-	if err != nil {
-		return &proto.GetResponse{
-			Message: err.Error(),
-		}, err
-	}
-	return &proto.GetResponse{
-		EventId: request.EventId,
-		Data:    data,
-	}, nil
-}
-
-func (s *StorageService) Save(ctx context.Context, request *proto.SaveRequest) (*proto.SaveResponse, error) {
-	log.Printf("[grpc]handler save request{%+v}", request)
-
-	if err := storage.SaveStorage.Save(ctx, request.StreamName, request.StreamId, request.EventId, request.Data); err != nil {
-		return &proto.SaveResponse{
-			Ack:     false,
-			Message: err.Error(),
-		}, err
-	}
-	return &proto.SaveResponse{
-		Ack: true,
-	}, nil
-}
-
 func Start(ctx context.Context) error {
 	grpcServer := grpc.NewServer()
-	proto.RegisterStorageServer(grpcServer, &StorageService{})
+	es := &EventService{}
+	proto.RegisterEventServiceServer(grpcServer, es)
+	proto.RegisterSubscribeServiceServer(grpcServer, &SubscribeService{eventService: es})
 
 	go func() {
 		lis, err := net.Listen("tcp", fmt.Sprintf(":%s", GrpcPort))

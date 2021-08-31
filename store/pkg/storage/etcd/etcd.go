@@ -9,7 +9,6 @@ import (
 	"github.com/stream-stack/store/store/pkg/storage"
 	"log"
 	"reflect"
-	"strings"
 )
 
 const BackendType = "ETCD"
@@ -74,8 +73,12 @@ func (e *etcdConnect) Save(ctx context.Context, streamName, streamId, eventId st
 	return nil
 }
 
-func (e *etcdConnect) GetAddress() string {
-	return strings.Join(e.addressSlice, ",")
+func (e *etcdConnect) GetCurrentStartPoint(ctx context.Context) (interface{}, error) {
+	put, err := e.cli.Put(ctx, "SetStartPointTemp", "")
+	if err != nil {
+		return nil, err
+	}
+	return put.Header.Revision, nil
 }
 
 func (e *etcdConnect) start(ctx context.Context) error {

@@ -44,7 +44,7 @@ func TestSave(t *testing.T) {
 	defer func() {
 		_ = dial.Close()
 	}()
-	cli := proto.NewStorageClient(dial)
+	cli := proto.NewEventServiceClient(dial)
 	for i := 1; i < 10; i++ {
 		save, err := cli.Save(todo, &proto.SaveRequest{
 			StreamName: "test",
@@ -92,7 +92,7 @@ func TestGet(t *testing.T) {
 	defer func() {
 		_ = dial.Close()
 	}()
-	cli := proto.NewStorageClient(dial)
+	cli := proto.NewEventServiceClient(dial)
 	for i := 1; i < 5; i++ {
 		save, err := cli.Save(todo, &proto.SaveRequest{
 			StreamName: "test",
