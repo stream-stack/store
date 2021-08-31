@@ -6,6 +6,7 @@ import (
 	"fmt"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	cehttp "github.com/cloudevents/sdk-go/v2/protocol/http"
+	"github.com/stream-stack/store/store/common/proto"
 	"log"
 )
 
@@ -38,18 +39,18 @@ func pushCloudEvent(ctx context.Context, event cloudevents.Event, runner *Subscr
 }
 
 func subscribeOperation(ctx context.Context, event cloudevents.Event, runner *SubscribeRunner) error {
-	operation := &SubscribeOperation{}
+	operation := &proto.SubscribeOperation{}
 	err := json.Unmarshal(event.Data(), operation)
 	if err != nil {
 		return err
 	}
-	ed := runner.ExtData.(map[string]*BaseSubscribe)
+	ed := runner.ExtData.(map[string]*proto.BaseSubscribe)
 	switch operation.Operation {
-	case "create":
+	case proto.Create:
 		ed[operation.Name] = operation.BaseSubscribe
 		runner := NewSubscribeRunnerWithSubscribeOperation(runner, operation.BaseSubscribe)
 		return runner.Start()
-	case "delete":
+	case proto.Delete:
 		_, ok := ed[operation.Name]
 		if !ok {
 			return nil

@@ -2,6 +2,7 @@ package publisher
 
 import (
 	"context"
+	"github.com/stream-stack/store/store/common/proto"
 	"log"
 	"time"
 )
@@ -13,12 +14,12 @@ type SubscribeRunner struct {
 	cancelFunc                           context.CancelFunc
 	ss                                   SubscribeManager
 	name, StreamName, StreamId, WatchKey string
-	PushSetting                          SubscribePushSetting
+	PushSetting                          proto.SubscribePushSetting
 	saveInterval                         time.Duration
 
 	Action     Action
 	ExtData    interface{}
-	StartPoint StartPoint
+	StartPoint proto.StartPoint
 }
 
 func newSystemSubscribeRunner(ctx context.Context, ss SubscribeManager, name string,
@@ -36,7 +37,7 @@ func newSystemSubscribeRunner(ctx context.Context, ss SubscribeManager, name str
 		Action:       subscribeOperation,
 	}
 }
-func NewSubscribeRunnerWithSubscribeOperation(parent *SubscribeRunner, s *BaseSubscribe) *SubscribeRunner {
+func NewSubscribeRunnerWithSubscribeOperation(parent *SubscribeRunner, s *proto.BaseSubscribe) *SubscribeRunner {
 	subCtx, cancelFunc := context.WithCancel(parent.ctx)
 	return &SubscribeRunner{
 		ctx:        subCtx,

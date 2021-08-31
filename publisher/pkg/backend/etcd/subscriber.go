@@ -9,6 +9,7 @@ import (
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/stream-stack/store/store/common/errdef"
 	"github.com/stream-stack/store/store/common/formater"
+	"github.com/stream-stack/store/store/common/proto"
 	"github.com/stream-stack/store/store/publisher/pkg/publisher"
 	"log"
 	"time"
@@ -88,7 +89,7 @@ func (s *SubscribeManagerImpl) LoadSnapshot(ctx context.Context, runner *publish
 func (s *SubscribeManagerImpl) SaveSnapshot(ctx context.Context, runner *publisher.SubscribeRunner) error {
 	key := formater.FormatKey(runner.StreamName, runner.StreamId, time.Now().String())
 	sp := runner.StartPoint.(uint64)
-	ed := runner.ExtData.(map[string]*publisher.BaseSubscribe)
+	ed := runner.ExtData.(map[string]*proto.BaseSubscribe)
 	e := &etcdSnapshot{
 		StartPoint: sp,
 		Subscribes: ed,
