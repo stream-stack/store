@@ -61,6 +61,6 @@ require (
 
 replace (
 	github.com/coreos/bbolt v1.3.6 => go.etcd.io/bbolt v1.3.6
-	github.com/stream-stack/store/store/common v0.0.0-20210825083649-7fd253a4239c => ../common
+	github.com/stream-stack/store/store/common => ../common
 	google.golang.org/grpc v1.39.0 => google.golang.org/grpc v1.26.0
 )

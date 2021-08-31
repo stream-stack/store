@@ -2,7 +2,7 @@ package etcd
 
 import (
 	"context"
-	"github.com/coreos/etcd/clientv3"
+	"github.com/ozonru/etcd/clientv3"
 	"github.com/stream-stack/store/store/common/errdef"
 	"github.com/stream-stack/store/store/common/formater"
 	"github.com/stream-stack/store/store/common/vars"
