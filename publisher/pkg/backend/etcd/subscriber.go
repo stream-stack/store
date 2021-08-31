@@ -3,12 +3,14 @@ package etcd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/stream-stack/store/store/common/errdef"
 	"github.com/stream-stack/store/store/common/formater"
 	"github.com/stream-stack/store/store/publisher/pkg/publisher"
 	"log"
-	"reflect"
 	"time"
 )
 
@@ -46,40 +48,58 @@ type SubscribeManagerImpl struct {
 	etcdClient *clientv3.Client
 }
 
-func (s *SubscribeManagerImpl) LoadSnapshot(ctx context.Context, streamName string, streamId string) (publisher.Snapshot, error) {
+func (s *SubscribeManagerImpl) LoadSnapshot(ctx context.Context, runner *publisher.SubscribeRunner) error {
 	var key string
 	var err error
 	var getResp *clientv3.GetResponse
-	key = formater.FormatStreamInfo(streamName, streamId)
+	key = formater.FormatStreamInfo(runner.StreamName, runner.StreamId)
 	getResp, err = s.etcdClient.Get(ctx, key, clientv3.WithSort(clientv3.SortByCreateRevision, clientv3.SortDescend),
 		clientv3.WithPrefix(), clientv3.WithLimit(1))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if getResp.Kvs == nil || len(getResp.Kvs) == 0 {
-		return nil, errdef.ErrEventNotFound
+		return errdef.ErrEventNotFound
 	}
 	if getResp.Kvs == nil {
 	}
 	value := getResp.Kvs[0]
 	if value.CreateRevision == 0 {
-		return nil, errdef.ErrEventNotFound
+		return errdef.ErrEventNotFound
 	}
 
 	snapshot := &etcdSnapshot{}
 	err = json.Unmarshal(value.Value, snapshot)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return snapshot, nil
+	runner.StartPoint = snapshot.StartPoint
+	runner.ExtData = snapshot.Subscribes
+	for _, subscribe := range snapshot.Subscribes {
+		subRunner := publisher.NewSubscribeRunnerWithSubscribeOperation(runner, subscribe)
+		err := subRunner.Start()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (s *SubscribeManagerImpl) SaveSnapshot(ctx context.Context, streamName string, streamId string, data []byte) error {
-	key := formater.FormatKey(streamName, streamId, time.Now().String())
-	value := string(data)
+func (s *SubscribeManagerImpl) SaveSnapshot(ctx context.Context, runner *publisher.SubscribeRunner) error {
+	key := formater.FormatKey(runner.StreamName, runner.StreamId, time.Now().String())
+	sp := runner.StartPoint.(uint64)
+	ed := runner.ExtData.(map[string]*publisher.BaseSubscribe)
+	e := &etcdSnapshot{
+		StartPoint: sp,
+		Subscribes: ed,
+	}
+	value, err := json.Marshal(e)
+	if err != nil {
+		return err
+	}
 	timeout, cancelFunc := context.WithTimeout(ctx, Timeout)
 	defer cancelFunc()
-	txn := s.etcdClient.Txn(timeout).If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0)).Then(clientv3.OpPut(key, value)).Else(clientv3.OpGet(key))
+	txn := s.etcdClient.Txn(timeout).If(clientv3.Compare(clientv3.CreateRevision(key), "=", 0)).Then(clientv3.OpPut(key, string(value))).Else(clientv3.OpGet(key))
 	commit, err := txn.Commit()
 	if err != nil {
 		return err
@@ -87,33 +107,43 @@ func (s *SubscribeManagerImpl) SaveSnapshot(ctx context.Context, streamName stri
 	if commit.Succeeded {
 		log.Printf("[etcd]key not exist, put key success,response:%+v", commit.OpResponse().Txn().Responses[0])
 		return nil
-	} else {
-		log.Printf("[etcd]key exist, get key value response:%+v", commit.OpResponse().Txn().Responses[0])
-		log.Printf("[etcd]data是否相等:%v \n", reflect.DeepEqual(commit.OpResponse().Txn().Responses[0].GetResponseRange().Kvs[0].Value, data))
-		if !reflect.DeepEqual(commit.OpResponse().Txn().Responses[0].GetResponseRange().Kvs[0].Value, data) {
-			return errdef.ErrEventExists
-		}
 	}
 	return nil
 }
 
-func (s *SubscribeManagerImpl) Watch(ctx context.Context, point publisher.StartPoint, Key string, eu publisher.EventUnmarshaler) (<-chan publisher.SubscribeEvent, error) {
-	i := point.(int64)
-	watch := s.etcdClient.Watch(ctx, Key, clientv3.WithRev(i))
-	c := make(chan publisher.SubscribeEvent)
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				close(c)
-			case response := <-watch:
-				//反序列化错误处理
-				events, _ := eu(Key, response)
-				for _, event := range events {
-					c <- event
+func (s *SubscribeManagerImpl) Watch(ctx context.Context, runner *publisher.SubscribeRunner) error {
+	i := runner.StartPoint.(int64)
+	watch := s.etcdClient.Watch(ctx, runner.WatchKey, clientv3.WithRev(i))
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case w := <-watch:
+			for _, v := range w.Events {
+				fmt.Printf("%s %q : %q\n", v.Type, v.Kv.Key, v.Kv.Value)
+				if v.Type == mvccpb.DELETE {
+					continue
 				}
+				streamName, streamId, eventId, err := formater.SscanfKey(string(v.Kv.Key))
+				if err != nil {
+					return err
+				}
+				revision := v.Kv.CreateRevision
+				newEvent := cloudevents.NewEvent()
+				newEvent.SetType(streamName)
+				newEvent.SetSubject(streamName)
+				newEvent.SetSource(streamId)
+				newEvent.SetID(eventId)
+				err = newEvent.SetData(cloudevents.ApplicationJSON, v.Kv.Value)
+				if err != nil {
+					return err
+				}
+				err = runner.Action(ctx, newEvent, runner)
+				if err != nil {
+					return err
+				}
+				runner.StartPoint = uint64(revision)
 			}
 		}
-	}()
-	return c, nil
+	}
 }
