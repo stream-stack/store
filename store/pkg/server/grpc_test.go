@@ -18,24 +18,24 @@ func TestSave(t *testing.T) {
 	port := "5001"
 	GrpcPort = port
 
-	storage.BackendAddressValue = []string{"139.155.161.172:2379"}
+	storage.BackendAddressValue = []string{"127.0.0.1:2379"}
 	storage.BackendTypeValue = etcd.BackendType
 
 	etcd.InitFlags()
-	etcd.Username = "root"
-	etcd.Password = "i6n629GqcE"
+	//etcd.Username = ""
+	//etcd.Password = ""
 	etcd.Timeout = time.Second * 5
 
 	todo := context.TODO()
 	todo, cancelFunc := context.WithCancel(todo)
 	//cluster
-	if err := storage.Start(todo); err != nil {
-		panic(err)
-	}
+	//if err := storage.Start(todo); err != nil {
+	//	panic(err)
+	//}
 	//grpc server
-	if err := Start(todo); err != nil {
-		panic(err)
-	}
+	//if err := Start(todo); err != nil {
+	//	panic(err)
+	//}
 
 	dial, err := grpc.Dial("localhost:"+port, grpc.WithInsecure())
 	if err != nil {
@@ -58,8 +58,6 @@ func TestSave(t *testing.T) {
 		log.Printf("收到服务器回复:{%+v} \n", save)
 	}
 	cancelFunc()
-	//abs, _ := filepath.Abs(c.DataDir)
-	//os.RemoveAll(abs)
 }
 
 func TestGet(t *testing.T) {
@@ -134,6 +132,4 @@ func TestGet(t *testing.T) {
 	}
 	log.Printf("收到服务器回复:{%+v} \n", save)
 	cancelFunc()
-	//abs, _ := filepath.Abs(c.DataDir)
-	//os.RemoveAll(abs)
 }

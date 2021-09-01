@@ -11,7 +11,7 @@ type SubscribeOperation struct {
 	//创建,删除订阅
 	Operation SubscribeOperationType `json:"operation"`
 	//基础信息
-	*BaseSubscribe `json:"-"`
+	*BaseSubscribe `json:"base_subscribe"`
 }
 
 type SubscribePushSetting struct {
@@ -28,8 +28,8 @@ type BaseSubscribe struct {
 	Name                 string     `json:"name"`
 	StartPoint           StartPoint `json:"start_point"`
 	Key                  string     `json:"watchKey"`
-	SubscribePushSetting `json:"-"`
-	SubscribeSaveSetting `json:"-"`
+	SubscribePushSetting `json:"subscribe_push_setting"`
+	SubscribeSaveSetting `json:"subscribe_save_setting"`
 }
 
 type StartPoint interface {

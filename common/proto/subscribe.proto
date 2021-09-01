@@ -11,7 +11,12 @@ service SubscribeService {
 // 创建订阅
 message CreateRequest {
   string name = 1;
-  string start_point = 2;
+  enum StartPoint
+  {
+    Current = 0;
+    Begin = 1;
+  }
+  StartPoint start_point = 2;
   string watch_key = 3;
   string push_url = 4;
   string push_max_request_duration = 5;

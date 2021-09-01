@@ -3,6 +3,7 @@ package publisher
 import (
 	"context"
 	"github.com/stream-stack/store/store/common/proto"
+	"github.com/stream-stack/store/store/common/vars"
 	"log"
 	"time"
 )
@@ -32,7 +33,7 @@ func newSystemSubscribeRunner(ctx context.Context, ss SubscribeManager, name str
 		name:         name,
 		StreamName:   streamName,
 		StreamId:     streamId,
-		WatchKey:     key,
+		WatchKey:     vars.StorePrefix + key,
 		saveInterval: saveInterval,
 		Action:       subscribeOperation,
 	}
@@ -47,7 +48,7 @@ func NewSubscribeRunnerWithSubscribeOperation(parent *SubscribeRunner, s *proto.
 		name:         s.Name,
 		StreamName:   "snapshot",
 		StreamId:     s.Name,
-		WatchKey:     s.Key,
+		WatchKey:     vars.StorePrefix + s.Key,
 		PushSetting:  s.SubscribePushSetting,
 		saveInterval: s.Interval,
 		Action:       pushCloudEvent,
@@ -61,10 +62,6 @@ func (r *SubscribeRunner) Start() error {
 	}
 
 	go func() {
-		err := r.ss.Watch(r.ctx, r)
-		if err != nil {
-			log.Printf("[subscribe-runner]runner %v watch error:%v", r.name, err)
-		}
 		runners[r.name] = r
 		defer func() {
 			_, ok := runners[r.name]
@@ -72,7 +69,12 @@ func (r *SubscribeRunner) Start() error {
 				return
 			}
 			delete(runners, r.name)
+			r.cancelFunc()
 		}()
+		err := r.ss.Watch(r.ctx, r)
+		if err != nil {
+			log.Printf("[subscribe-runner]runner %v watch error:%v", r.name, err)
+		}
 	}()
 	go func() {
 		//TODO:满足多个条件才保存,减少快照数量

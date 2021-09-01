@@ -7,7 +7,6 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
-	"github.com/stream-stack/store/store/common/errdef"
 	"github.com/stream-stack/store/store/common/formater"
 	"github.com/stream-stack/store/store/common/proto"
 	"github.com/stream-stack/store/store/publisher/pkg/publisher"
@@ -60,13 +59,15 @@ func (s *SubscribeManagerImpl) LoadSnapshot(ctx context.Context, runner *publish
 		return err
 	}
 	if getResp.Kvs == nil || len(getResp.Kvs) == 0 {
-		return errdef.ErrEventNotFound
-	}
-	if getResp.Kvs == nil {
+		runner.StartPoint = int64(0)
+		runner.ExtData = make(map[string]*proto.BaseSubscribe)
+		return nil
 	}
 	value := getResp.Kvs[0]
 	if value.CreateRevision == 0 {
-		return errdef.ErrEventNotFound
+		runner.StartPoint = int64(0)
+		runner.ExtData = make(map[string]*proto.BaseSubscribe)
+		return nil
 	}
 
 	snapshot := &etcdSnapshot{}
@@ -88,7 +89,7 @@ func (s *SubscribeManagerImpl) LoadSnapshot(ctx context.Context, runner *publish
 
 func (s *SubscribeManagerImpl) SaveSnapshot(ctx context.Context, runner *publisher.SubscribeRunner) error {
 	key := formater.FormatKey(runner.StreamName, runner.StreamId, time.Now().String())
-	sp := runner.StartPoint.(uint64)
+	sp := runner.StartPoint.(int64)
 	ed := runner.ExtData.(map[string]*proto.BaseSubscribe)
 	e := &etcdSnapshot{
 		StartPoint: sp,
@@ -114,7 +115,8 @@ func (s *SubscribeManagerImpl) SaveSnapshot(ctx context.Context, runner *publish
 
 func (s *SubscribeManagerImpl) Watch(ctx context.Context, runner *publisher.SubscribeRunner) error {
 	i := runner.StartPoint.(int64)
-	watch := s.etcdClient.Watch(ctx, runner.WatchKey, clientv3.WithRev(i))
+	log.Printf("[etcd]watch key: %s,startPoint:%v", runner.WatchKey, i+1)
+	watch := s.etcdClient.Watch(ctx, runner.WatchKey, clientv3.WithRev(i+1), clientv3.WithPrefix())
 	for {
 		select {
 		case <-ctx.Done():
@@ -127,7 +129,8 @@ func (s *SubscribeManagerImpl) Watch(ctx context.Context, runner *publisher.Subs
 				}
 				streamName, streamId, eventId, err := formater.SscanfKey(string(v.Kv.Key))
 				if err != nil {
-					return err
+					log.Printf("[etcd]formater.SscanfKey key %s error:%v , ingore this key", string(v.Kv.Key), err)
+					continue
 				}
 				revision := v.Kv.CreateRevision
 				newEvent := cloudevents.NewEvent()
@@ -139,11 +142,12 @@ func (s *SubscribeManagerImpl) Watch(ctx context.Context, runner *publisher.Subs
 				if err != nil {
 					return err
 				}
+				//TODO:如果一直出现错误,则需要死信队列
 				err = runner.Action(ctx, newEvent, runner)
 				if err != nil {
 					return err
 				}
-				runner.StartPoint = uint64(revision)
+				runner.StartPoint = revision
 			}
 		}
 	}

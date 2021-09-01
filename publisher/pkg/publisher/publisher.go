@@ -31,6 +31,6 @@ func Start(ctx context.Context) error {
 		return fmt.Errorf("[publisher]init storage error:%v", err)
 	}
 	runner := newSystemSubscribeRunner(ctx, ss, "system", "snapshot", "system_subscribe",
-		"system/subscribe", time.Minute)
+		"/system/subscribe", time.Minute)
 	return runner.Start()
 }

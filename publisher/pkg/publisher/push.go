@@ -32,13 +32,14 @@ func pushCloudEvent(ctx context.Context, event cloudevents.Event, runner *Subscr
 	} else {
 		var httpResult *cehttp.Result
 		cloudevents.ResultAs(res, &httpResult)
-		log.Printf("Sent data %+v with status code %d", event, httpResult.StatusCode)
+		log.Printf("Sent data %+v with status code %+v", event, httpResult)
 	}
 
 	return nil
 }
 
 func subscribeOperation(ctx context.Context, event cloudevents.Event, runner *SubscribeRunner) error {
+	log.Printf("[subscribeOperation]收到创建/删除subscribe请求,event:%v", event)
 	operation := &proto.SubscribeOperation{}
 	err := json.Unmarshal(event.Data(), operation)
 	if err != nil {
@@ -47,10 +48,12 @@ func subscribeOperation(ctx context.Context, event cloudevents.Event, runner *Su
 	ed := runner.ExtData.(map[string]*proto.BaseSubscribe)
 	switch operation.Operation {
 	case proto.Create:
+		log.Printf("[subscribeOperation]收到创建subscribe请求,开始创建")
 		ed[operation.Name] = operation.BaseSubscribe
 		runner := NewSubscribeRunnerWithSubscribeOperation(runner, operation.BaseSubscribe)
 		return runner.Start()
 	case proto.Delete:
+		log.Printf("[subscribeOperation]收到删除subscribe请求,开始删除")
 		_, ok := ed[operation.Name]
 		if !ok {
 			return nil

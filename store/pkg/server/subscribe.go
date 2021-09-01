@@ -28,13 +28,20 @@ func (s *SubscribeService) Create(ctx context.Context, request *proto.CreateRequ
 			Message: "Parse SaveInterval Duration error:" + err.Error(),
 		}, err
 	}
-	point, err := storage.SaveStorage.GetCurrentStartPoint(ctx)
-	if err != nil {
-		return &proto.CreateResponse{
-			Ack:     false,
-			Message: "get StartPoint error:" + err.Error(),
-		}, err
+	var point interface{}
+	switch request.StartPoint {
+	case proto.CreateRequest_Current:
+		point, err = storage.SaveStorage.GetCurrentStartPoint(ctx)
+		if err != nil {
+			return &proto.CreateResponse{
+				Ack:     false,
+				Message: "get StartPoint error:" + err.Error(),
+			}, err
+		}
+	case proto.CreateRequest_Begin:
+		point = 0
 	}
+
 	operation := proto.SubscribeOperation{
 		Operation: proto.Create,
 		BaseSubscribe: &proto.BaseSubscribe{
@@ -77,7 +84,7 @@ func (s *SubscribeService) Create(ctx context.Context, request *proto.CreateRequ
 
 func (s *SubscribeService) Delete(ctx context.Context, request *proto.DeleteRequest) (*proto.DeleteResponse, error) {
 	operation := proto.SubscribeOperation{
-		Operation: proto.Create,
+		Operation: proto.Delete,
 		BaseSubscribe: &proto.BaseSubscribe{
 			Name: request.Name,
 		},
