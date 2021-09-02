@@ -48,7 +48,7 @@ func TestSave(t *testing.T) {
 	for i := 1; i < 10; i++ {
 		save, err := cli.Save(todo, &proto.SaveRequest{
 			StreamName: "test",
-			StreamId:   "1",
+			StreamId:   "3",
 			EventId:    strconv.Itoa(i),
 			Data:       []byte(fmt.Sprintf("test-%d", i)),
 		})

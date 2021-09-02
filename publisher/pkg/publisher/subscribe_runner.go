@@ -5,10 +5,11 @@ import (
 	"github.com/stream-stack/store/store/common/proto"
 	"github.com/stream-stack/store/store/common/vars"
 	"log"
+	"sync"
 	"time"
 )
 
-var runners = make(map[string]*SubscribeRunner)
+var runners = sync.Map{}
 
 type SubscribeRunner struct {
 	ctx                                  context.Context
@@ -62,13 +63,9 @@ func (r *SubscribeRunner) Start() error {
 	}
 
 	go func() {
-		runners[r.name] = r
+		runners.Store(r.name, r)
 		defer func() {
-			_, ok := runners[r.name]
-			if !ok {
-				return
-			}
-			delete(runners, r.name)
+			runners.Delete(r.name)
 			r.cancelFunc()
 		}()
 		err := r.ss.Watch(r.ctx, r)
