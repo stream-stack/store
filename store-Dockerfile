@@ -1,0 +1,20 @@
+FROM golang:1.16 as builder
+
+WORKDIR /workspace
+# Copy the go source
+COPY store /workspace
+COPY common /common
+RUN ls /workspace
+
+ENV GOPROXY=https://goproxy.cn
+
+RUN go mod download
+
+# Build
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o store cmd/main.go
+
+FROM ubuntu:hirsute
+WORKDIR /
+COPY --from=builder /workspace/store .
+
+CMD ["/store"]

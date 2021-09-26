@@ -19,7 +19,8 @@ type SubscribeRunner struct {
 	PushSetting                          proto.SubscribePushSetting
 	saveInterval                         time.Duration
 
-	Action     Action
+	Action Action
+	//TODO:针对数据更新做并发控制
 	ExtData    interface{}
 	StartPoint proto.StartPoint
 }
