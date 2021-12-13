@@ -12,6 +12,7 @@ import (
 	"github.com/stream-stack/store/pkg/wal"
 	"google.golang.org/grpc"
 	"math"
+	"os"
 	"path/filepath"
 )
 
@@ -21,17 +22,11 @@ var Raft *raft.Raft
 var RaftManager *transport.Manager
 
 func StartRaft(ctx context.Context) error {
-	//_, port, err := net.SplitHostPort(Address)
-	//if err != nil {
-	//	logrus.Fatalf("failed to parse local address (%q): %v", Address, err)
-	//}
-	//sock, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
-	//if err != nil {
-	//	logrus.Fatalf("failed to listen: %v", err)
-	//}
-
 	c := raft.DefaultConfig()
 	c.SnapshotThreshold = math.MaxUint64
+	if len(RaftId) <= 0 {
+		RaftId, _ = os.Hostname()
+	}
 	c.LocalID = raft.ServerID(RaftId)
 
 	ss, err := snapshot.NewSnapshotStore(ctx)

@@ -2,6 +2,7 @@ package index
 
 import (
 	"context"
+	"fmt"
 	"github.com/hashicorp/raft"
 	"github.com/stream-stack/store/pkg/config"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -9,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-const dbName = "index.db"
+const dbName = "index"
 
 var FSM raft.FSM
 
@@ -19,6 +20,8 @@ type FSMImpl struct {
 
 func (f *FSMImpl) Apply(log *raft.Log) interface{} {
 	//TODO:实现构建快照
+	fmt.Println("Apply:")
+	fmt.Printf("%+v", log)
 	return nil
 }
 
@@ -46,7 +49,7 @@ func StartFSM(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
+	go func() {
 		select {
 		case <-ctx.Done():
 			db.Close()

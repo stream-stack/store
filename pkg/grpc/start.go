@@ -24,10 +24,10 @@ func StartGrpc(ctx context.Context) error {
 
 	s := grpc.NewServer()
 	raft.RaftManager.Register(s)
-	leaderhealth.Setup(raft.Raft, s, []string{""})
+	leaderhealth.Setup(raft.Raft, s, []string{"example"})
 	raftadmin.Register(s, raft.Raft)
 	reflection.Register(s)
-	defer func() {
+	go func() {
 		select {
 		case <-ctx.Done():
 			s.GracefulStop()

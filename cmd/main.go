@@ -36,6 +36,9 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 			if err := index.StartFSM(ctx); err != nil {
 				return err
 			}
+			if err := raft.StartRaft(ctx); err != nil {
+				return err
+			}
 			if err := grpc.StartGrpc(ctx); err != nil {
 				return err
 			}
