@@ -25,7 +25,7 @@ func StartGrpc(ctx context.Context) error {
 
 	s := grpc.NewServer()
 	raft.RaftManager.Register(s)
-	leaderhealth.Setup(raft.Raft, s, []string{"example"})
+	leaderhealth.Setup(raft.Raft, s, []string{""})
 	raftadmin.Register(s, raft.Raft)
 	reflection.Register(s)
 	protocol.RegisterEventServiceServer(s, NewEventService())

@@ -1,0 +1,53 @@
+syntax = "proto3";
+option go_package = "../protocol";
+
+service EventService {
+  rpc Apply (ApplyRequest) returns (ApplyResponse) {
+  }
+  rpc Offset (OffsetRequest) returns (OffsetResponse) {
+  }
+  rpc Get (GetRequest) returns (GetResponse) {
+  }
+}
+
+// 请求信息
+message OffsetRequest {
+  string subscribeId = 1;
+  uint64 offset = 2;
+}
+
+// 响应信息
+message OffsetResponse{
+  bool ack = 1;
+  string message = 2;
+}
+
+// 请求信息
+message ApplyRequest {
+  string streamName = 1;
+  string streamId = 2;
+  string eventId = 3;
+  bytes data = 4;
+}
+
+// 响应信息
+message ApplyResponse{
+  bool ack = 1;
+  string message = 2;
+}
+
+// 请求信息
+message GetRequest {
+  string streamName = 1;
+  string streamId = 2;
+  string eventId = 3;
+}
+
+// 响应信息
+message GetResponse {
+  string streamName = 1;
+  string streamId = 2;
+  string eventId = 3;
+  bytes data = 4;
+}
+
