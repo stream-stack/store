@@ -1,7 +1,12 @@
 # store
 
-./etcd --advertise-client-urls=http://0.0.0.0:2379 --listen-client-urls=http://0.0.0.0:2379
+```shell
+main.exe --DataDir=data1 --Address=localhost:2001 --RaftId=node1 --Bootstrap=true
+main.exe --DataDir=data2 --Address=localhost:2002 --RaftId=node2
+main.exe --DataDir=data3 --Address=localhost:2003 --RaftId=node3
 
-./etcdctl --endpoints=localhost:2379 watch /stream/system/subscribe --prefix --rev=1
+raftadmin localhost:2001 add_voter node2 localhost:2002 0
+raftadmin localhost:2001 add_voter node3 localhost:2003 0
 
-./etcdctl --endpoints=localhost:2379 get / --prefix
+raftadmin --leader multi:///localhost:2001,localhost:2002 add_voter node3 localhost:2003 0
+```

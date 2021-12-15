@@ -36,23 +36,6 @@ func (l *LogStoreImpl) GetLog(index uint64, log *raft.Log) error {
 	return nil
 }
 
-// Decode reverses the encode operation on a byte slice input
-func decodeMsgPack(buf []byte, out interface{}) error {
-	r := bytes.NewBuffer(buf)
-	hd := codec.MsgpackHandle{}
-	dec := codec.NewDecoder(r, &hd)
-	return dec.Decode(out)
-}
-
-// Encode writes an encoded object to a new bytes buffer
-func encodeMsgPack(in interface{}) (*bytes.Buffer, error) {
-	buf := bytes.NewBuffer(nil)
-	hd := codec.MsgpackHandle{}
-	enc := codec.NewEncoder(buf, &hd)
-	err := enc.Encode(in)
-	return buf, err
-}
-
 func (l *LogStoreImpl) StoreLog(log *raft.Log) error {
 	pack, err := encodeMsgPack(log)
 	if err != nil {
@@ -89,12 +72,10 @@ const walDir = "wal"
 
 func StartWalEngine(ctx context.Context) error {
 	open, err := wal.Open(filepath.Join(config.DataDir, walDir), &wal.Options{
-		NoSync:           false,
-		SegmentSize:      0,
+		NoSync:           noSync,
+		SegmentSize:      segmentSize,
 		LogFormat:        wal.JSON,
 		SegmentCacheSize: 0,
-		DirPerms:         0,
-		FilePerms:        0,
 	})
 	if err != nil {
 		return err
@@ -110,4 +91,21 @@ func StartWalEngine(ctx context.Context) error {
 		log: open,
 	}
 	return nil
+}
+
+// Decode reverses the encode operation on a byte slice input
+func decodeMsgPack(buf []byte, out interface{}) error {
+	r := bytes.NewBuffer(buf)
+	hd := codec.MsgpackHandle{}
+	dec := codec.NewDecoder(r, &hd)
+	return dec.Decode(out)
+}
+
+// Encode writes an encoded object to a new bytes buffer
+func encodeMsgPack(in interface{}) (*bytes.Buffer, error) {
+	buf := bytes.NewBuffer(nil)
+	hd := codec.MsgpackHandle{}
+	enc := codec.NewEncoder(buf, &hd)
+	err := enc.Encode(in)
+	return buf, err
 }

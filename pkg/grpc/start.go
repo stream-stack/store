@@ -6,6 +6,7 @@ import (
 	"github.com/Jille/raft-grpc-leader-rpc/leaderhealth"
 	"github.com/Jille/raftadmin"
 	"github.com/stream-stack/store/pkg/config"
+	"github.com/stream-stack/store/pkg/protocol"
 	"github.com/stream-stack/store/pkg/raft"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -27,6 +28,7 @@ func StartGrpc(ctx context.Context) error {
 	leaderhealth.Setup(raft.Raft, s, []string{"example"})
 	raftadmin.Register(s, raft.Raft)
 	reflection.Register(s)
+	protocol.RegisterEventServiceServer(s, NewEventService())
 	go func() {
 		select {
 		case <-ctx.Done():

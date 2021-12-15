@@ -35,18 +35,19 @@ func StartRaft(ctx context.Context) error {
 	}
 
 	stablePath := filepath.Join(config.DataDir, stable)
+	empty := isEmptyDir(stablePath)
 	sdb, err := boltdb.NewBoltStore(stablePath)
 	if err != nil {
 		return fmt.Errorf(`boltdb.NewBoltStore(%q): %v`, stablePath, err)
 	}
 
 	RaftManager = transport.New(raft.ServerAddress(config.Address), []grpc.DialOption{grpc.WithInsecure()})
-	r, err := raft.NewRaft(c, index.FSM, wal.LogStore, sdb, ss, RaftManager.Transport())
+	Raft, err = raft.NewRaft(c, index.FSM, wal.LogStore, sdb, ss, RaftManager.Transport())
 	if err != nil {
 		return fmt.Errorf(`raft.NewRaft: %v`, err)
 	}
 
-	if Bootstrap {
+	if Bootstrap && empty {
 		cfg := raft.Configuration{
 			Servers: []raft.Server{
 				{
@@ -56,11 +57,20 @@ func StartRaft(ctx context.Context) error {
 				},
 			},
 		}
-		f := r.BootstrapCluster(cfg)
+		f := Raft.BootstrapCluster(cfg)
 		if err := f.Error(); err != nil {
 			return fmt.Errorf("raft.Raft.BootstrapCluster: %v", err)
 		}
 	}
-	Raft = r
 	return nil
+}
+
+func isEmptyDir(dir string) bool {
+	_, err := os.Stat(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return true
+		}
+	}
+	return false
 }

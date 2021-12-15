@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/raft"
 	"github.com/stream-stack/store/pkg/config"
+	"github.com/stream-stack/store/pkg/protocol"
 	"github.com/syndtr/goleveldb/leveldb"
 	"io"
 	"path/filepath"
@@ -13,15 +14,30 @@ import (
 const dbName = "index"
 
 var FSM raft.FSM
+var KVDb *leveldb.DB
 
 type FSMImpl struct {
-	db *leveldb.DB
 }
 
+/*
+三种情况:
+1.producer,储存 聚合id+eventId,log.index
+2.consumer,储存 订阅者id,offset
+3.read,获取 聚合id+eventId,log.index
+*/
 func (f *FSMImpl) Apply(log *raft.Log) interface{} {
 	//TODO:实现构建快照
 	fmt.Println("Apply:")
 	fmt.Printf("%+v", log)
+	data := log.Data
+	flag := data[0]
+	switch flag {
+	case protocol.Apply:
+		//TODO:error 处理?
+		return KVDb.Put(log.Extensions, protocol.Uint64ToBytes(log.Index), nil)
+	case protocol.Offset:
+		return KVDb.Put(log.Extensions, log.Data[1:], nil)
+	}
 	return nil
 }
 
@@ -45,16 +61,17 @@ func (F *FSMSnapshotImpl) Release() {
 }
 
 func StartFSM(ctx context.Context) error {
-	db, err := leveldb.OpenFile(filepath.Join(config.DataDir, dbName), nil)
+	var err error
+	KVDb, err = leveldb.OpenFile(filepath.Join(config.DataDir, dbName), nil)
 	if err != nil {
 		return err
 	}
 	go func() {
 		select {
 		case <-ctx.Done():
-			db.Close()
+			KVDb.Close()
 		}
 	}()
-	FSM = &FSMImpl{db: db}
+	FSM = &FSMImpl{}
 	return nil
 }
