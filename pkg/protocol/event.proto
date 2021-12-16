@@ -8,6 +8,14 @@ service EventService {
   }
   rpc Get (GetRequest) returns (GetResponse) {
   }
+  rpc Subscribe (SubscribeRequest) returns (stream GetResponse) {
+  }
+}
+
+message SubscribeRequest{
+  string subscribeId = 1;
+  string regexp = 2;
+  uint64 offset = 3;
 }
 
 // 请求信息

@@ -13,6 +13,9 @@ import (
 
 const dbName = "index"
 
+var NotifyCh = make(chan chan struct{})
+var Subscribes = make([]chan struct{}, 0)
+
 var FSM raft.FSM
 var KVDb *leveldb.DB
 
@@ -27,18 +30,31 @@ type FSMImpl struct {
 */
 func (f *FSMImpl) Apply(log *raft.Log) interface{} {
 	//TODO:实现构建快照
-	fmt.Println("Apply:")
-	fmt.Printf("%+v", log)
+	fmt.Printf("Apply:%+v \n", log)
 	data := log.Data
 	flag := data[0]
 	switch flag {
 	case protocol.Apply:
 		//TODO:error 处理?
-		return KVDb.Put(log.Extensions, protocol.Uint64ToBytes(log.Index), nil)
+		err := KVDb.Put(log.Extensions, protocol.Uint64ToBytes(log.Index), nil)
+		if err != nil {
+			return err
+		}
+		defer NotifySubscribe()
+		return err
 	case protocol.Offset:
 		return KVDb.Put(log.Extensions, log.Data[1:], nil)
 	}
 	return nil
+}
+
+func NotifySubscribe() {
+	fmt.Println("NotifySubscribe.开始执行notify", len(Subscribes))
+	for _, subscribe := range Subscribes {
+		close(subscribe)
+	}
+	Subscribes = make([]chan struct{}, 0)
+	fmt.Println("NotifySubscribe.已执行notify")
 }
 
 func (f *FSMImpl) Snapshot() (raft.FSMSnapshot, error) {
@@ -73,5 +89,16 @@ func StartFSM(ctx context.Context) error {
 		}
 	}()
 	FSM = &FSMImpl{}
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				close(NotifyCh)
+			case notifyItem := <-NotifyCh:
+				Subscribes = append(Subscribes, notifyItem)
+				fmt.Println("index.已添加notify")
+			}
+		}
+	}()
 	return nil
 }

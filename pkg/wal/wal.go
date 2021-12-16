@@ -71,11 +71,17 @@ func (l *LogStoreImpl) DeleteRange(min, max uint64) error {
 const walDir = "wal"
 
 func StartWalEngine(ctx context.Context) error {
+	var walLogFormat wal.LogFormat
+	if binaryLogFormat {
+		walLogFormat = wal.Binary
+	} else {
+		walLogFormat = wal.JSON
+	}
 	open, err := wal.Open(filepath.Join(config.DataDir, walDir), &wal.Options{
 		NoSync:           noSync,
 		SegmentSize:      segmentSize,
-		LogFormat:        wal.JSON,
-		SegmentCacheSize: 0,
+		LogFormat:        walLogFormat,
+		SegmentCacheSize: segmentCacheSize,
 	})
 	if err != nil {
 		return err
