@@ -71,7 +71,7 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 	if log.Type != hraft.LogCommand {
 		return nil
 	}
-	if log.Data[0] == protocol.Offset {
+	if log.Data[0] == protocol.KeyValue {
 		return nil
 	}
 	meta, err := protocol.ParseMeta(log.Extensions)
@@ -82,30 +82,12 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 		return nil
 	}
 	fmt.Println("当前正在发送Index:", index)
-	return server.Send(&protocol.GetResponse{
+	return server.Send(&protocol.ReadResponse{
 		StreamName: meta[0],
 		StreamId:   meta[1],
 		EventId:    meta[2],
 		Data:       log.Data[1:],
 	})
-}
-
-func (e *EventService) Offset(ctx context.Context, request *protocol.OffsetRequest) (*protocol.OffsetResponse, error) {
-	applyFuture := raft.Raft.ApplyLog(hraft.Log{
-		Data:       protocol.AddOffsetFlag(request.Offset),
-		Extensions: []byte(request.SubscribeId),
-	}, time.Second)
-	//TODO:超时设置
-	if err := applyFuture.Error(); err != nil {
-		return &protocol.OffsetResponse{
-			Ack:     true,
-			Message: err.Error(),
-		}, err
-	}
-	return &protocol.OffsetResponse{
-		Ack:     true,
-		Message: strconv.FormatUint(applyFuture.Index(), 10),
-	}, nil
 }
 
 func (e *EventService) Apply(ctx context.Context, request *protocol.ApplyRequest) (*protocol.ApplyResponse, error) {
@@ -126,7 +108,7 @@ func (e *EventService) Apply(ctx context.Context, request *protocol.ApplyRequest
 	}, nil
 }
 
-func (e *EventService) Get(ctx context.Context, request *protocol.GetRequest) (*protocol.GetResponse, error) {
+func (e *EventService) Read(ctx context.Context, request *protocol.ReadRequest) (*protocol.ReadResponse, error) {
 	key := protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId)
 	get, err := index.KVDb.Get(key, nil)
 	if err != nil {
@@ -142,7 +124,7 @@ func (e *EventService) Get(ctx context.Context, request *protocol.GetRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	return &protocol.GetResponse{
+	return &protocol.ReadResponse{
 		StreamName: meta[0],
 		StreamId:   meta[1],
 		EventId:    meta[2],

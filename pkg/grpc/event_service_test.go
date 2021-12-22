@@ -39,7 +39,7 @@ func TestApply(t *testing.T) {
 		panic(err)
 	}
 	fmt.Println(apply)
-	get, err := client.Get(todo, &protocol.GetRequest{
+	get, err := client.Read(todo, &protocol.ReadRequest{
 		StreamName: "a",
 		StreamId:   "b",
 		EventId:    "c",

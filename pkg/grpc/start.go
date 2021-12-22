@@ -29,6 +29,7 @@ func StartGrpc(ctx context.Context) error {
 	raftadmin.Register(s, raft.Raft)
 	reflection.Register(s)
 	protocol.RegisterEventServiceServer(s, NewEventService())
+	protocol.RegisterKVServiceServer(s, NewKVService())
 	go func() {
 		select {
 		case <-ctx.Done():

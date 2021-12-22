@@ -1,14 +1,13 @@
 package protocol
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"strings"
 )
 
 const Apply byte = 'A'
-const Offset byte = 'O'
+const KeyValue byte = 'K'
 
 func AddApplyFlag(data []byte) []byte {
 	tmp := make([]byte, len(data)+1)
@@ -17,11 +16,11 @@ func AddApplyFlag(data []byte) []byte {
 	return tmp
 }
 
-func AddOffsetFlag(offset uint64) []byte {
-	buffer := &bytes.Buffer{}
-	buffer.WriteByte(Offset)
-	binary.Write(buffer, binary.BigEndian, offset)
-	return buffer.Bytes()
+func AddKeyValueFlag(data []byte) []byte {
+	tmp := make([]byte, len(data)+1)
+	tmp[0] = KeyValue
+	copy(tmp[1:], data)
+	return tmp
 }
 
 func FormatApplyMeta(streamName string, streamId string, eventId string) []byte {

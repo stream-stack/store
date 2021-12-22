@@ -42,7 +42,7 @@ func (f *FSMImpl) Apply(log *raft.Log) interface{} {
 		}
 		defer NotifySubscribe()
 		return err
-	case protocol.Offset:
+	case protocol.KeyValue:
 		return KVDb.Put(log.Extensions, log.Data[1:], nil)
 	}
 	return nil

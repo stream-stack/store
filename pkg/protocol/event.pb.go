@@ -88,118 +88,6 @@ func (x *SubscribeRequest) GetOffset() uint64 {
 }
 
 // 请求信息
-type OffsetRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	SubscribeId string `protobuf:"bytes,1,opt,name=subscribeId,proto3" json:"subscribeId,omitempty"`
-	Offset      uint64 `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
-}
-
-func (x *OffsetRequest) Reset() {
-	*x = OffsetRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_event_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *OffsetRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OffsetRequest) ProtoMessage() {}
-
-func (x *OffsetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_event_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OffsetRequest.ProtoReflect.Descriptor instead.
-func (*OffsetRequest) Descriptor() ([]byte, []int) {
-	return file_event_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *OffsetRequest) GetSubscribeId() string {
-	if x != nil {
-		return x.SubscribeId
-	}
-	return ""
-}
-
-func (x *OffsetRequest) GetOffset() uint64 {
-	if x != nil {
-		return x.Offset
-	}
-	return 0
-}
-
-// 响应信息
-type OffsetResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Ack     bool   `protobuf:"varint,1,opt,name=ack,proto3" json:"ack,omitempty"`
-	Message string `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-}
-
-func (x *OffsetResponse) Reset() {
-	*x = OffsetResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_event_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *OffsetResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OffsetResponse) ProtoMessage() {}
-
-func (x *OffsetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_event_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use OffsetResponse.ProtoReflect.Descriptor instead.
-func (*OffsetResponse) Descriptor() ([]byte, []int) {
-	return file_event_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *OffsetResponse) GetAck() bool {
-	if x != nil {
-		return x.Ack
-	}
-	return false
-}
-
-func (x *OffsetResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
-// 请求信息
 type ApplyRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -214,7 +102,7 @@ type ApplyRequest struct {
 func (x *ApplyRequest) Reset() {
 	*x = ApplyRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_event_proto_msgTypes[3]
+		mi := &file_event_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -227,7 +115,7 @@ func (x *ApplyRequest) String() string {
 func (*ApplyRequest) ProtoMessage() {}
 
 func (x *ApplyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_event_proto_msgTypes[3]
+	mi := &file_event_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -240,7 +128,7 @@ func (x *ApplyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyRequest.ProtoReflect.Descriptor instead.
 func (*ApplyRequest) Descriptor() ([]byte, []int) {
-	return file_event_proto_rawDescGZIP(), []int{3}
+	return file_event_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ApplyRequest) GetStreamName() string {
@@ -284,7 +172,7 @@ type ApplyResponse struct {
 func (x *ApplyResponse) Reset() {
 	*x = ApplyResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_event_proto_msgTypes[4]
+		mi := &file_event_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -297,7 +185,7 @@ func (x *ApplyResponse) String() string {
 func (*ApplyResponse) ProtoMessage() {}
 
 func (x *ApplyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_event_proto_msgTypes[4]
+	mi := &file_event_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -310,7 +198,7 @@ func (x *ApplyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApplyResponse.ProtoReflect.Descriptor instead.
 func (*ApplyResponse) Descriptor() ([]byte, []int) {
-	return file_event_proto_rawDescGZIP(), []int{4}
+	return file_event_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ApplyResponse) GetAck() bool {
@@ -328,7 +216,7 @@ func (x *ApplyResponse) GetMessage() string {
 }
 
 // 请求信息
-type GetRequest struct {
+type ReadRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -338,23 +226,23 @@ type GetRequest struct {
 	EventId    string `protobuf:"bytes,3,opt,name=eventId,proto3" json:"eventId,omitempty"`
 }
 
-func (x *GetRequest) Reset() {
-	*x = GetRequest{}
+func (x *ReadRequest) Reset() {
+	*x = ReadRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_event_proto_msgTypes[5]
+		mi := &file_event_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *GetRequest) String() string {
+func (x *ReadRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetRequest) ProtoMessage() {}
+func (*ReadRequest) ProtoMessage() {}
 
-func (x *GetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_event_proto_msgTypes[5]
+func (x *ReadRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_event_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -365,26 +253,26 @@ func (x *GetRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetRequest.ProtoReflect.Descriptor instead.
-func (*GetRequest) Descriptor() ([]byte, []int) {
-	return file_event_proto_rawDescGZIP(), []int{5}
+// Deprecated: Use ReadRequest.ProtoReflect.Descriptor instead.
+func (*ReadRequest) Descriptor() ([]byte, []int) {
+	return file_event_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetRequest) GetStreamName() string {
+func (x *ReadRequest) GetStreamName() string {
 	if x != nil {
 		return x.StreamName
 	}
 	return ""
 }
 
-func (x *GetRequest) GetStreamId() string {
+func (x *ReadRequest) GetStreamId() string {
 	if x != nil {
 		return x.StreamId
 	}
 	return ""
 }
 
-func (x *GetRequest) GetEventId() string {
+func (x *ReadRequest) GetEventId() string {
 	if x != nil {
 		return x.EventId
 	}
@@ -392,7 +280,7 @@ func (x *GetRequest) GetEventId() string {
 }
 
 // 响应信息
-type GetResponse struct {
+type ReadResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -403,23 +291,23 @@ type GetResponse struct {
 	Data       []byte `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *GetResponse) Reset() {
-	*x = GetResponse{}
+func (x *ReadResponse) Reset() {
+	*x = ReadResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_event_proto_msgTypes[6]
+		mi := &file_event_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *GetResponse) String() string {
+func (x *ReadResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetResponse) ProtoMessage() {}
+func (*ReadResponse) ProtoMessage() {}
 
-func (x *GetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_event_proto_msgTypes[6]
+func (x *ReadResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_event_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -430,33 +318,33 @@ func (x *GetResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetResponse.ProtoReflect.Descriptor instead.
-func (*GetResponse) Descriptor() ([]byte, []int) {
-	return file_event_proto_rawDescGZIP(), []int{6}
+// Deprecated: Use ReadResponse.ProtoReflect.Descriptor instead.
+func (*ReadResponse) Descriptor() ([]byte, []int) {
+	return file_event_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *GetResponse) GetStreamName() string {
+func (x *ReadResponse) GetStreamName() string {
 	if x != nil {
 		return x.StreamName
 	}
 	return ""
 }
 
-func (x *GetResponse) GetStreamId() string {
+func (x *ReadResponse) GetStreamId() string {
 	if x != nil {
 		return x.StreamId
 	}
 	return ""
 }
 
-func (x *GetResponse) GetEventId() string {
+func (x *ReadResponse) GetEventId() string {
 	if x != nil {
 		return x.EventId
 	}
 	return ""
 }
 
-func (x *GetResponse) GetData() []byte {
+func (x *ReadResponse) GetData() []byte {
 	if x != nil {
 		return x.Data
 	}
@@ -473,52 +361,41 @@ var file_event_proto_rawDesc = []byte{
 	0x65, 0x49, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x67, 0x65, 0x78, 0x70, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x67, 0x65, 0x78, 0x70, 0x12, 0x16, 0x0a, 0x06, 0x6f,
 	0x66, 0x66, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x6f, 0x66, 0x66,
-	0x73, 0x65, 0x74, 0x22, 0x49, 0x0a, 0x0d, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x20, 0x0a, 0x0b, 0x73, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62,
-	0x65, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x73, 0x75, 0x62, 0x73, 0x63,
-	0x72, 0x69, 0x62, 0x65, 0x49, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x22, 0x3c,
-	0x0a, 0x0e, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x10, 0x0a, 0x03, 0x61, 0x63, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x03, 0x61,
-	0x63, 0x6b, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x78, 0x0a, 0x0c,
-	0x41, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1e, 0x0a, 0x0a,
-	0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x4e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x0a, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08,
-	0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
-	0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x49, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x76, 0x65, 0x6e,
-	0x74, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x65, 0x76, 0x65, 0x6e, 0x74,
-	0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c,
-	0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x3b, 0x0a, 0x0d, 0x41, 0x70, 0x70, 0x6c, 0x79, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x63, 0x6b, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x08, 0x52, 0x03, 0x61, 0x63, 0x6b, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73,
-	0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73,
-	0x61, 0x67, 0x65, 0x22, 0x62, 0x0a, 0x0a, 0x47, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x4e, 0x61, 0x6d, 0x65, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x4e, 0x61, 0x6d,
-	0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x49, 0x64, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x49, 0x64, 0x12, 0x18, 0x0a,
-	0x07, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
-	0x65, 0x76, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x22, 0x77, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d,
-	0x4e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x74, 0x72, 0x65,
-	0x61, 0x6d, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d,
-	0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d,
-	0x49, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x07, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04,
-	0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61,
-	0x32, 0xbb, 0x01, 0x0a, 0x0c, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
-	0x65, 0x12, 0x28, 0x0a, 0x05, 0x41, 0x70, 0x70, 0x6c, 0x79, 0x12, 0x0d, 0x2e, 0x41, 0x70, 0x70,
-	0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0e, 0x2e, 0x41, 0x70, 0x70, 0x6c,
-	0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x2b, 0x0a, 0x06, 0x4f,
-	0x66, 0x66, 0x73, 0x65, 0x74, 0x12, 0x0e, 0x2e, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0f, 0x2e, 0x4f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x22, 0x0a, 0x03, 0x47, 0x65, 0x74, 0x12,
-	0x0b, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x47,
-	0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x30, 0x0a, 0x09,
-	0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x12, 0x11, 0x2e, 0x53, 0x75, 0x62, 0x73,
-	0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x47,
-	0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x30, 0x01, 0x42, 0x0d,
+	0x73, 0x65, 0x74, 0x22, 0x78, 0x0a, 0x0c, 0x41, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x4e, 0x61, 0x6d,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x4e,
+	0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x49, 0x64, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x49, 0x64, 0x12,
+	0x18, 0x0a, 0x07, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x07, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74,
+	0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x3b, 0x0a,
+	0x0d, 0x41, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x10,
+	0x0a, 0x03, 0x61, 0x63, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x03, 0x61, 0x63, 0x6b,
+	0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x63, 0x0a, 0x0b, 0x52, 0x65,
+	0x61, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x74, 0x72,
+	0x65, 0x61, 0x6d, 0x4e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73,
+	0x74, 0x72, 0x65, 0x61, 0x6d, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x74, 0x72,
+	0x65, 0x61, 0x6d, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x74, 0x72,
+	0x65, 0x61, 0x6d, 0x49, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x49, 0x64,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x22,
+	0x78, 0x0a, 0x0c, 0x52, 0x65, 0x61, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x1e, 0x0a, 0x0a, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x4e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x4e, 0x61, 0x6d, 0x65, 0x12,
+	0x1a, 0x0a, 0x08, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x49, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x65,
+	0x76, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x65, 0x76,
+	0x65, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x32, 0x92, 0x01, 0x0a, 0x0c, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x28, 0x0a, 0x05, 0x41, 0x70,
+	0x70, 0x6c, 0x79, 0x12, 0x0d, 0x2e, 0x41, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x0e, 0x2e, 0x41, 0x70, 0x70, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x00, 0x12, 0x25, 0x0a, 0x04, 0x52, 0x65, 0x61, 0x64, 0x12, 0x0c, 0x2e, 0x52,
+	0x65, 0x61, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0d, 0x2e, 0x52, 0x65, 0x61,
+	0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x31, 0x0a, 0x09, 0x53,
+	0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x12, 0x11, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63,
+	0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0d, 0x2e, 0x52, 0x65,
+	0x61, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x30, 0x01, 0x42, 0x0d,
 	0x5a, 0x0b, 0x2e, 0x2e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x62, 0x06, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
@@ -535,27 +412,23 @@ func file_event_proto_rawDescGZIP() []byte {
 	return file_event_proto_rawDescData
 }
 
-var file_event_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_event_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_event_proto_goTypes = []interface{}{
 	(*SubscribeRequest)(nil), // 0: SubscribeRequest
-	(*OffsetRequest)(nil),    // 1: OffsetRequest
-	(*OffsetResponse)(nil),   // 2: OffsetResponse
-	(*ApplyRequest)(nil),     // 3: ApplyRequest
-	(*ApplyResponse)(nil),    // 4: ApplyResponse
-	(*GetRequest)(nil),       // 5: GetRequest
-	(*GetResponse)(nil),      // 6: GetResponse
+	(*ApplyRequest)(nil),     // 1: ApplyRequest
+	(*ApplyResponse)(nil),    // 2: ApplyResponse
+	(*ReadRequest)(nil),      // 3: ReadRequest
+	(*ReadResponse)(nil),     // 4: ReadResponse
 }
 var file_event_proto_depIdxs = []int32{
-	3, // 0: EventService.Apply:input_type -> ApplyRequest
-	1, // 1: EventService.Offset:input_type -> OffsetRequest
-	5, // 2: EventService.Get:input_type -> GetRequest
-	0, // 3: EventService.Subscribe:input_type -> SubscribeRequest
-	4, // 4: EventService.Apply:output_type -> ApplyResponse
-	2, // 5: EventService.Offset:output_type -> OffsetResponse
-	6, // 6: EventService.Get:output_type -> GetResponse
-	6, // 7: EventService.Subscribe:output_type -> GetResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
+	1, // 0: EventService.Apply:input_type -> ApplyRequest
+	3, // 1: EventService.Read:input_type -> ReadRequest
+	0, // 2: EventService.Subscribe:input_type -> SubscribeRequest
+	2, // 3: EventService.Apply:output_type -> ApplyResponse
+	4, // 4: EventService.Read:output_type -> ReadResponse
+	4, // 5: EventService.Subscribe:output_type -> ReadResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -580,30 +453,6 @@ func file_event_proto_init() {
 			}
 		}
 		file_event_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OffsetRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_event_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OffsetResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_event_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ApplyRequest); i {
 			case 0:
 				return &v.state
@@ -615,7 +464,7 @@ func file_event_proto_init() {
 				return nil
 			}
 		}
-		file_event_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_event_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ApplyResponse); i {
 			case 0:
 				return &v.state
@@ -627,8 +476,8 @@ func file_event_proto_init() {
 				return nil
 			}
 		}
-		file_event_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRequest); i {
+		file_event_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ReadRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -639,8 +488,8 @@ func file_event_proto_init() {
 				return nil
 			}
 		}
-		file_event_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetResponse); i {
+		file_event_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ReadResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -658,7 +507,7 @@ func file_event_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_event_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -685,8 +534,7 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type EventServiceClient interface {
 	Apply(ctx context.Context, in *ApplyRequest, opts ...grpc.CallOption) (*ApplyResponse, error)
-	Offset(ctx context.Context, in *OffsetRequest, opts ...grpc.CallOption) (*OffsetResponse, error)
-	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
+	Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error)
 	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (EventService_SubscribeClient, error)
 }
 
@@ -707,18 +555,9 @@ func (c *eventServiceClient) Apply(ctx context.Context, in *ApplyRequest, opts .
 	return out, nil
 }
 
-func (c *eventServiceClient) Offset(ctx context.Context, in *OffsetRequest, opts ...grpc.CallOption) (*OffsetResponse, error) {
-	out := new(OffsetResponse)
-	err := c.cc.Invoke(ctx, "/EventService/Offset", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *eventServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
-	out := new(GetResponse)
-	err := c.cc.Invoke(ctx, "/EventService/Get", in, out, opts...)
+func (c *eventServiceClient) Read(ctx context.Context, in *ReadRequest, opts ...grpc.CallOption) (*ReadResponse, error) {
+	out := new(ReadResponse)
+	err := c.cc.Invoke(ctx, "/EventService/Read", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -741,7 +580,7 @@ func (c *eventServiceClient) Subscribe(ctx context.Context, in *SubscribeRequest
 }
 
 type EventService_SubscribeClient interface {
-	Recv() (*GetResponse, error)
+	Recv() (*ReadResponse, error)
 	grpc.ClientStream
 }
 
@@ -749,8 +588,8 @@ type eventServiceSubscribeClient struct {
 	grpc.ClientStream
 }
 
-func (x *eventServiceSubscribeClient) Recv() (*GetResponse, error) {
-	m := new(GetResponse)
+func (x *eventServiceSubscribeClient) Recv() (*ReadResponse, error) {
+	m := new(ReadResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -760,8 +599,7 @@ func (x *eventServiceSubscribeClient) Recv() (*GetResponse, error) {
 // EventServiceServer is the server API for EventService service.
 type EventServiceServer interface {
 	Apply(context.Context, *ApplyRequest) (*ApplyResponse, error)
-	Offset(context.Context, *OffsetRequest) (*OffsetResponse, error)
-	Get(context.Context, *GetRequest) (*GetResponse, error)
+	Read(context.Context, *ReadRequest) (*ReadResponse, error)
 	Subscribe(*SubscribeRequest, EventService_SubscribeServer) error
 }
 
@@ -772,11 +610,8 @@ type UnimplementedEventServiceServer struct {
 func (*UnimplementedEventServiceServer) Apply(context.Context, *ApplyRequest) (*ApplyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Apply not implemented")
 }
-func (*UnimplementedEventServiceServer) Offset(context.Context, *OffsetRequest) (*OffsetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Offset not implemented")
-}
-func (*UnimplementedEventServiceServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (*UnimplementedEventServiceServer) Read(context.Context, *ReadRequest) (*ReadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Read not implemented")
 }
 func (*UnimplementedEventServiceServer) Subscribe(*SubscribeRequest, EventService_SubscribeServer) error {
 	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
@@ -804,38 +639,20 @@ func _EventService_Apply_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _EventService_Offset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OffsetRequest)
+func _EventService_Read_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EventServiceServer).Offset(ctx, in)
+		return srv.(EventServiceServer).Read(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/EventService/Offset",
+		FullMethod: "/EventService/Read",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventServiceServer).Offset(ctx, req.(*OffsetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _EventService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EventServiceServer).Get(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/EventService/Get",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventServiceServer).Get(ctx, req.(*GetRequest))
+		return srv.(EventServiceServer).Read(ctx, req.(*ReadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -849,7 +666,7 @@ func _EventService_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) 
 }
 
 type EventService_SubscribeServer interface {
-	Send(*GetResponse) error
+	Send(*ReadResponse) error
 	grpc.ServerStream
 }
 
@@ -857,7 +674,7 @@ type eventServiceSubscribeServer struct {
 	grpc.ServerStream
 }
 
-func (x *eventServiceSubscribeServer) Send(m *GetResponse) error {
+func (x *eventServiceSubscribeServer) Send(m *ReadResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -870,12 +687,8 @@ var _EventService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _EventService_Apply_Handler,
 		},
 		{
-			MethodName: "Offset",
-			Handler:    _EventService_Offset_Handler,
-		},
-		{
-			MethodName: "Get",
-			Handler:    _EventService_Get_Handler,
+			MethodName: "Read",
+			Handler:    _EventService_Read_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
