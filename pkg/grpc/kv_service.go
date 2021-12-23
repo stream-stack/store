@@ -7,7 +7,6 @@ import (
 	"github.com/stream-stack/store/pkg/protocol"
 	"github.com/stream-stack/store/pkg/raft"
 	"strconv"
-	"time"
 )
 
 type KVService struct {
@@ -17,7 +16,7 @@ func (K *KVService) Put(ctx context.Context, request *protocol.PutRequest) (*pro
 	applyFuture := raft.Raft.ApplyLog(hraft.Log{
 		Data:       protocol.AddKeyValueFlag(request.Val),
 		Extensions: request.Key,
-	}, time.Second)
+	}, applyLogTimeout)
 	//TODO:超时设置
 	if err := applyFuture.Error(); err != nil {
 		return &protocol.PutResponse{

@@ -48,6 +48,7 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 		},
 	}
 	config.InitFlags()
+	grpc.InitFlags()
 	index.InitFlags()
 	raft.InitFlags()
 	snapshot.InitFlags()

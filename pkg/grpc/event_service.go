@@ -10,7 +10,6 @@ import (
 	"github.com/stream-stack/store/pkg/wal"
 	"regexp"
 	"strconv"
-	"time"
 )
 
 type EventService struct {
@@ -94,8 +93,7 @@ func (e *EventService) Apply(ctx context.Context, request *protocol.ApplyRequest
 	applyFuture := raft.Raft.ApplyLog(hraft.Log{
 		Data:       protocol.AddApplyFlag(request.Data),
 		Extensions: protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId),
-	}, time.Second)
-	//TODO:超时设置
+	}, applyLogTimeout)
 	if err := applyFuture.Error(); err != nil {
 		return &protocol.ApplyResponse{
 			Ack:     true,
