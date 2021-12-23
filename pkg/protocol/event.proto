@@ -43,5 +43,6 @@ message ReadResponse {
   string streamId = 2;
   string eventId = 3;
   bytes data = 4;
+  uint64 offset = 5;
 }
 

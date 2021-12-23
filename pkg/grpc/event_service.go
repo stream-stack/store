@@ -86,6 +86,7 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 		StreamId:   meta[1],
 		EventId:    meta[2],
 		Data:       log.Data[1:],
+		Offset:     index,
 	})
 }
 
@@ -127,6 +128,7 @@ func (e *EventService) Read(ctx context.Context, request *protocol.ReadRequest) 
 		StreamId:   meta[1],
 		EventId:    meta[2],
 		Data:       log.Data[1:],
+		Offset:     dataIndex,
 	}, nil
 }
 
