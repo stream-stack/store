@@ -2,10 +2,14 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	hraft "github.com/hashicorp/raft"
 	"github.com/stream-stack/store/pkg/index"
 	"github.com/stream-stack/store/pkg/protocol"
 	"github.com/stream-stack/store/pkg/raft"
+	"github.com/syndtr/goleveldb/leveldb/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"strconv"
 )
 
@@ -17,7 +21,6 @@ func (K *KVService) Put(ctx context.Context, request *protocol.PutRequest) (*pro
 		Data:       protocol.AddKeyValueFlag(request.Val),
 		Extensions: request.Key,
 	}, applyLogTimeout)
-	//TODO:超时设置
 	if err := applyFuture.Error(); err != nil {
 		return &protocol.PutResponse{
 			Ack:     true,
@@ -33,7 +36,10 @@ func (K *KVService) Put(ctx context.Context, request *protocol.PutRequest) (*pro
 func (K *KVService) Get(ctx context.Context, request *protocol.GetRequest) (*protocol.GetResponse, error) {
 	get, err := index.KVDb.Get(request.Key, nil)
 	if err != nil {
-		return &protocol.GetResponse{}, err
+		if err == errors.ErrNotFound {
+			return &protocol.GetResponse{}, status.Error(codes.NotFound, fmt.Sprintf("key %s not found", request.Key))
+		}
+		return &protocol.GetResponse{}, status.Error(codes.Unknown, err.Error())
 	}
 	return &protocol.GetResponse{Data: get}, nil
 }

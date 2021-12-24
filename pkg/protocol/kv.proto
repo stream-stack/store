@@ -26,6 +26,6 @@ message GetRequest {
 
 // 响应信息
 message GetResponse {
-  bytes data = 4;
+  bytes data = 1;
 }
 
