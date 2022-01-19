@@ -3,12 +3,12 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"github.com/Knetic/govaluate"
 	hraft "github.com/hashicorp/raft"
 	"github.com/stream-stack/store/pkg/index"
 	"github.com/stream-stack/store/pkg/protocol"
 	"github.com/stream-stack/store/pkg/raft"
 	"github.com/stream-stack/store/pkg/wal"
-	"regexp"
 	"strconv"
 )
 
@@ -16,10 +16,10 @@ type EventService struct {
 }
 
 func (e *EventService) Subscribe(request *protocol.SubscribeRequest, server protocol.EventService_SubscribeServer) error {
-	var compile *regexp.Regexp
+	var expression *govaluate.EvaluableExpression
 	var err error
 	if len(request.Regexp) != 0 {
-		compile, err = regexp.Compile(request.Regexp)
+		expression, err = govaluate.NewEvaluableExpression(request.Regexp)
 		if err != nil {
 			return err
 		}
@@ -44,7 +44,7 @@ func (e *EventService) Subscribe(request *protocol.SubscribeRequest, server prot
 			case <-server.Context().Done():
 				return server.Context().Err()
 			default:
-				if err := sendSubscribeResponse(start, server, compile); err != nil {
+				if err := sendSubscribeResponse(start, server, expression); err != nil {
 					return err
 				}
 			}
@@ -59,7 +59,7 @@ func (e *EventService) Subscribe(request *protocol.SubscribeRequest, server prot
 	}
 }
 
-func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeServer, compile *regexp.Regexp) error {
+func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeServer, expression *govaluate.EvaluableExpression) error {
 	fmt.Println("当前正在发送Index:", index)
 	//index = index + 1
 	log := &hraft.Log{}
@@ -77,7 +77,22 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 	if err != nil {
 		return err
 	}
-	if compile != nil && !compile.MatchString(meta[0]) {
+	param := make(map[string]interface{})
+	entryData := log.Data[1:]
+	param["streamName"] = meta[0]
+	param["streamId"] = meta[1]
+	param["eventId"] = meta[2]
+
+	evaluate, err := expression.Evaluate(param)
+	if err != nil {
+		return err
+	}
+	b, ok := evaluate.(bool)
+	if !ok {
+		return fmt.Errorf("表达式错误,返回值不为bool,当前返回值为:%+v", b)
+	}
+
+	if !b {
 		return nil
 	}
 	fmt.Println("当前正在发送Index:", index)
@@ -85,7 +100,7 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 		StreamName: meta[0],
 		StreamId:   meta[1],
 		EventId:    meta[2],
-		Data:       log.Data[1:],
+		Data:       entryData,
 		Offset:     index,
 	})
 }

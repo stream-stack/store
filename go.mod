@@ -7,6 +7,7 @@ require (
 	github.com/Jille/raft-grpc-leader-rpc v1.1.0
 	github.com/Jille/raft-grpc-transport v1.1.0
 	github.com/Jille/raftadmin v1.2.0
+	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect

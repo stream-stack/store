@@ -73,7 +73,7 @@ func TestSubscribe(t *testing.T) {
 	go func() {
 		subscribe, err := client.Subscribe(todo, &protocol.SubscribeRequest{
 			SubscribeId: "1",
-			Regexp:      "",
+			Regexp:      "streamName=~ '*+' && streamId =~ '*+' && eventId =~ '*+'",
 			Offset:      0,
 		})
 		if err != nil {
