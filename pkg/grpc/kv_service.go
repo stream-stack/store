@@ -8,12 +8,23 @@ import (
 	"github.com/stream-stack/store/pkg/protocol"
 	"github.com/stream-stack/store/pkg/raft"
 	"github.com/syndtr/goleveldb/leveldb/errors"
+	"github.com/syndtr/goleveldb/leveldb/util"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"strconv"
 )
 
 type KVService struct {
+}
+
+func (K *KVService) GetRange(ctx context.Context, request *protocol.GetRequest) (*protocol.GetRangeResponse, error) {
+	iterator := index.KVDb.NewIterator(util.BytesPrefix(request.Key), nil)
+	defer iterator.Release()
+	responses := make([]*protocol.GetResponse, 0)
+	for iterator.Next() {
+		responses = append(responses, &protocol.GetResponse{Data: iterator.Value()})
+	}
+	return &protocol.GetRangeResponse{Response: responses}, nil
 }
 
 func (K *KVService) Put(ctx context.Context, request *protocol.PutRequest) (*protocol.PutResponse, error) {

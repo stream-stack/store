@@ -232,6 +232,54 @@ func (x *GetResponse) GetData() []byte {
 	return nil
 }
 
+// GetRange响应信息
+type GetRangeResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Response []*GetResponse `protobuf:"bytes,1,rep,name=response,proto3" json:"response,omitempty"`
+}
+
+func (x *GetRangeResponse) Reset() {
+	*x = GetRangeResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_kv_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetRangeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRangeResponse) ProtoMessage() {}
+
+func (x *GetRangeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_kv_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRangeResponse.ProtoReflect.Descriptor instead.
+func (*GetRangeResponse) Descriptor() ([]byte, []int) {
+	return file_kv_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetRangeResponse) GetResponse() []*GetResponse {
+	if x != nil {
+		return x.Response
+	}
+	return nil
+}
+
 var File_kv_proto protoreflect.FileDescriptor
 
 var file_kv_proto_rawDesc = []byte{
@@ -246,14 +294,21 @@ var file_kv_proto_rawDesc = []byte{
 	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x22, 0x21, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x52, 0x65,
 	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x32, 0x53, 0x0a, 0x09, 0x4b, 0x56,
-	0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x22, 0x0a, 0x03, 0x50, 0x75, 0x74, 0x12, 0x0b,
-	0x2e, 0x50, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x50, 0x75,
-	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x22, 0x0a, 0x03, 0x47,
-	0x65, 0x74, 0x12, 0x0b, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x0c, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42,
-	0x0d, 0x5a, 0x0b, 0x2e, 0x2e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x20, 0x01, 0x28, 0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x3c, 0x0a, 0x10, 0x47, 0x65,
+	0x74, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x28,
+	0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x0c, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x08,
+	0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x81, 0x01, 0x0a, 0x09, 0x4b, 0x56, 0x53,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x22, 0x0a, 0x03, 0x50, 0x75, 0x74, 0x12, 0x0b, 0x2e,
+	0x50, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c, 0x2e, 0x50, 0x75, 0x74,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x22, 0x0a, 0x03, 0x47, 0x65,
+	0x74, 0x12, 0x0b, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0c,
+	0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x2c,
+	0x0a, 0x08, 0x47, 0x65, 0x74, 0x52, 0x61, 0x6e, 0x67, 0x65, 0x12, 0x0b, 0x2e, 0x47, 0x65, 0x74,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x61, 0x6e,
+	0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x0d, 0x5a, 0x0b,
+	0x2e, 0x2e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x6f, 0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -268,23 +323,27 @@ func file_kv_proto_rawDescGZIP() []byte {
 	return file_kv_proto_rawDescData
 }
 
-var file_kv_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_kv_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_kv_proto_goTypes = []interface{}{
-	(*PutRequest)(nil),  // 0: PutRequest
-	(*PutResponse)(nil), // 1: PutResponse
-	(*GetRequest)(nil),  // 2: GetRequest
-	(*GetResponse)(nil), // 3: GetResponse
+	(*PutRequest)(nil),       // 0: PutRequest
+	(*PutResponse)(nil),      // 1: PutResponse
+	(*GetRequest)(nil),       // 2: GetRequest
+	(*GetResponse)(nil),      // 3: GetResponse
+	(*GetRangeResponse)(nil), // 4: GetRangeResponse
 }
 var file_kv_proto_depIdxs = []int32{
-	0, // 0: KVService.Put:input_type -> PutRequest
-	2, // 1: KVService.Get:input_type -> GetRequest
-	1, // 2: KVService.Put:output_type -> PutResponse
-	3, // 3: KVService.Get:output_type -> GetResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	3, // 0: GetRangeResponse.response:type_name -> GetResponse
+	0, // 1: KVService.Put:input_type -> PutRequest
+	2, // 2: KVService.Get:input_type -> GetRequest
+	2, // 3: KVService.GetRange:input_type -> GetRequest
+	1, // 4: KVService.Put:output_type -> PutResponse
+	3, // 5: KVService.Get:output_type -> GetResponse
+	4, // 6: KVService.GetRange:output_type -> GetRangeResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_kv_proto_init() }
@@ -341,6 +400,18 @@ func file_kv_proto_init() {
 				return nil
 			}
 		}
+		file_kv_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetRangeResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -348,7 +419,7 @@ func file_kv_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_kv_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -376,6 +447,7 @@ const _ = grpc.SupportPackageIsVersion6
 type KVServiceClient interface {
 	Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
+	GetRange(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetRangeResponse, error)
 }
 
 type kVServiceClient struct {
@@ -404,10 +476,20 @@ func (c *kVServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.
 	return out, nil
 }
 
+func (c *kVServiceClient) GetRange(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetRangeResponse, error) {
+	out := new(GetRangeResponse)
+	err := c.cc.Invoke(ctx, "/KVService/GetRange", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // KVServiceServer is the server API for KVService service.
 type KVServiceServer interface {
 	Put(context.Context, *PutRequest) (*PutResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
+	GetRange(context.Context, *GetRequest) (*GetRangeResponse, error)
 }
 
 // UnimplementedKVServiceServer can be embedded to have forward compatible implementations.
@@ -419,6 +501,9 @@ func (*UnimplementedKVServiceServer) Put(context.Context, *PutRequest) (*PutResp
 }
 func (*UnimplementedKVServiceServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedKVServiceServer) GetRange(context.Context, *GetRequest) (*GetRangeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRange not implemented")
 }
 
 func RegisterKVServiceServer(s *grpc.Server, srv KVServiceServer) {
@@ -461,6 +546,24 @@ func _KVService_Get_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _KVService_GetRange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVServiceServer).GetRange(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/KVService/GetRange",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVServiceServer).GetRange(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _KVService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "KVService",
 	HandlerType: (*KVServiceServer)(nil),
@@ -472,6 +575,10 @@ var _KVService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _KVService_Get_Handler,
+		},
+		{
+			MethodName: "GetRange",
+			Handler:    _KVService_GetRange_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

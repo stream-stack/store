@@ -6,6 +6,8 @@ service KVService {
   }
   rpc Get (GetRequest) returns (GetResponse) {
   }
+  rpc GetRange(GetRequest) returns (GetRangeResponse){
+  }
 }
 // 请求信息
 message PutRequest {
@@ -27,5 +29,10 @@ message GetRequest {
 // 响应信息
 message GetResponse {
   bytes data = 1;
+}
+
+// GetRange响应信息
+message GetRangeResponse {
+  repeated GetResponse response = 1;
 }
 
