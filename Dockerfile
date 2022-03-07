@@ -23,6 +23,5 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o store main.go
 FROM ubuntu:latest
 WORKDIR /
 COPY --from=builder /workspace/store .
-USER 65532:65532
 
 CMD ["/store"]
