@@ -3,9 +3,9 @@ package wal
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/hashicorp/go-msgpack/codec"
 	"github.com/hashicorp/raft"
+	"github.com/sirupsen/logrus"
 	"github.com/stream-stack/store/pkg/config"
 	"github.com/tidwall/wal"
 	"path/filepath"
@@ -26,12 +26,11 @@ func (l *LogStoreImpl) LastIndex() (uint64, error) {
 }
 
 func (l *LogStoreImpl) GetLog(index uint64, log *raft.Log) error {
-	firstIndex, _ := l.log.FirstIndex()
-	lastIndex, _ := l.log.LastIndex()
-
 	read, err := l.log.Read(index)
 	if err != nil {
-		fmt.Println("l.log.Read 错误, index:", index, "firstIndex:", firstIndex, "lastIndex:", lastIndex, "err:", err)
+		firstIndex, _ := l.log.FirstIndex()
+		lastIndex, _ := l.log.LastIndex()
+		logrus.Errorf("GetLog error:%v,logIndex:%d,firstIndex:%d,lastIndex:%d", err, index, firstIndex, lastIndex)
 		return err
 	}
 	err = decodeMsgPack(read, log)
@@ -42,12 +41,11 @@ func (l *LogStoreImpl) GetLog(index uint64, log *raft.Log) error {
 }
 
 func (l *LogStoreImpl) StoreLog(log *raft.Log) error {
-	firstIndex, _ := l.log.FirstIndex()
-	lastIndex, _ := l.log.LastIndex()
-	fmt.Println("StoreLog, index:", log.Index, "firstIndex:", firstIndex, "lastIndex:", lastIndex)
 	pack, err := encodeMsgPack(log)
 	if err != nil {
-		fmt.Println("StoreLog error", err)
+		firstIndex, _ := l.log.FirstIndex()
+		lastIndex, _ := l.log.LastIndex()
+		logrus.Errorf("StoreLog error:%v,logIndex:%d,firstIndex:%d,lastIndex:%d", err, log.Index, firstIndex, lastIndex)
 		return err
 	}
 	return l.log.Write(log.Index, pack.Bytes())
@@ -56,7 +54,7 @@ func (l *LogStoreImpl) StoreLog(log *raft.Log) error {
 func (l *LogStoreImpl) StoreLogs(logs []*raft.Log) error {
 	firstIndex, _ := l.log.FirstIndex()
 	lastIndex, _ := l.log.LastIndex()
-	fmt.Println("StoreLogs", logs[0].Index, "firstIndex:", firstIndex, "lastIndex:", lastIndex)
+	logrus.Debugf("StoreLogs,logIndex:%d,firstIndex:%d,lastIndex:%d", logs[0].Index, firstIndex, lastIndex)
 	batch := new(wal.Batch)
 	for _, log := range logs {
 		pack, err := encodeMsgPack(log)
@@ -69,17 +67,14 @@ func (l *LogStoreImpl) StoreLogs(logs []*raft.Log) error {
 }
 
 func (l *LogStoreImpl) DeleteRange(min, max uint64) error {
-	//err := l.log.TruncateFront(max - min)
-	//if err != nil {
-	//	return err
-	//}
-	err := l.log.TruncateBack(min - 1)
-	if err != nil {
-		return err
-	}
 	firstIndex, _ := l.log.FirstIndex()
 	lastIndex, _ := l.log.LastIndex()
-	fmt.Println("DeleteRange success", "first", firstIndex, "last", lastIndex, "delete args", min, max)
+	logrus.Debugf("DeleteRange,args.min:%d,args.max:%d,firstIndex:%d,lastIndex:%d", min, max, firstIndex, lastIndex)
+	err := l.log.TruncateBack(min - 1)
+	if err != nil {
+		logrus.Errorf("DeleteRange error:%v,args.min:%d,args.max:%d,firstIndex:%d,lastIndex:%d", err, min, max, firstIndex, lastIndex)
+		return err
+	}
 	return nil
 }
 

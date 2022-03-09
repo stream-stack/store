@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Knetic/govaluate"
 	hraft "github.com/hashicorp/raft"
+	"github.com/sirupsen/logrus"
 	"github.com/stream-stack/store/pkg/index"
 	"github.com/stream-stack/store/pkg/protocol"
 	"github.com/stream-stack/store/pkg/raft"
@@ -29,38 +30,40 @@ func (e *EventService) Subscribe(request *protocol.SubscribeRequest, server prot
 		start = 1
 	}
 	for {
-		fmt.Println("当前offset:", start)
+		logrus.Debugf("当前offset:%d", start)
 		//注册channel
 		c := make(chan struct{})
 		index.NotifyCh <- c
-		fmt.Println("Subscribe.已注册channel")
+		logrus.Debugf("Subscribe.已注册channel")
 		lastIndex, err := wal.LogStore.LastIndex()
 		if err != nil {
+			logrus.Errorf("获取LastIndex error:%v", err)
 			return err
 		}
-		fmt.Println("当前lastIndex:", lastIndex)
+		logrus.Debugf("当前lastIndex:%d", lastIndex)
 		for ; start <= lastIndex; start++ {
 			select {
 			case <-server.Context().Done():
 				return server.Context().Err()
 			default:
 				if err := sendSubscribeResponse(start, server, expression); err != nil {
+					logrus.Errorf("sendSubscribeResponse error:%v", err)
 					return err
 				}
 			}
 		}
-		fmt.Println("赋值后,当前offset:", start)
+		logrus.Debugf("赋值后,当前offset:%d", lastIndex)
 		select {
 		case <-server.Context().Done():
 			return server.Context().Err()
 		case <-c:
-			fmt.Println("Subscribe.收到notify")
+			logrus.Debugf("Subscribe.收到notify")
 		}
 	}
 }
 
 func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeServer, expression *govaluate.EvaluableExpression) error {
-	fmt.Println("当前正在发送Index:", index)
+	logrus.Debugf("当前正在发送Index:%d", index)
 	//index = index + 1
 	log := &hraft.Log{}
 	err := wal.LogStore.GetLog(index, log)
@@ -95,7 +98,7 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 	if !b {
 		return nil
 	}
-	fmt.Println("当前正在发送Index:", index)
+	logrus.Debugf("当前正在发送Index:%d", index)
 	return server.Send(&protocol.ReadResponse{
 		StreamName: meta[0],
 		StreamId:   meta[1],

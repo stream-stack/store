@@ -2,8 +2,8 @@ package index
 
 import (
 	"context"
-	"fmt"
 	"github.com/hashicorp/raft"
+	"github.com/sirupsen/logrus"
 	"github.com/stream-stack/store/pkg/config"
 	"github.com/stream-stack/store/pkg/protocol"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -30,7 +30,7 @@ type FSMImpl struct {
 */
 func (f *FSMImpl) Apply(log *raft.Log) interface{} {
 	//TODO:实现构建快照
-	fmt.Printf("Apply:%+v \n", log)
+	logrus.Debugf("Apply:%+v", log)
 	data := log.Data
 	flag := data[0]
 	switch flag {
@@ -49,12 +49,12 @@ func (f *FSMImpl) Apply(log *raft.Log) interface{} {
 }
 
 func NotifySubscribe() {
-	fmt.Println("NotifySubscribe.开始执行notify", len(Subscribes))
+	logrus.Debugf("NotifySubscribe.开始执行notify,length:%d", len(Subscribes))
 	for _, subscribe := range Subscribes {
 		close(subscribe)
 	}
 	Subscribes = make([]chan struct{}, 0)
-	fmt.Println("NotifySubscribe.已执行notify")
+	logrus.Debugf("NotifySubscribe.已执行notify")
 }
 
 func (f *FSMImpl) Snapshot() (raft.FSMSnapshot, error) {
@@ -96,7 +96,7 @@ func StartFSM(ctx context.Context) error {
 				close(NotifyCh)
 			case notifyItem := <-NotifyCh:
 				Subscribes = append(Subscribes, notifyItem)
-				fmt.Println("index.已添加notify")
+				logrus.Debugf("index.已添加notify")
 			}
 		}
 	}()
