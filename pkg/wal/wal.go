@@ -3,6 +3,7 @@ package wal
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/hashicorp/go-msgpack/codec"
 	"github.com/hashicorp/raft"
 	"github.com/stream-stack/store/pkg/config"
@@ -25,8 +26,12 @@ func (l *LogStoreImpl) LastIndex() (uint64, error) {
 }
 
 func (l *LogStoreImpl) GetLog(index uint64, log *raft.Log) error {
+	firstIndex, _ := l.log.FirstIndex()
+	lastIndex, _ := l.log.LastIndex()
+
 	read, err := l.log.Read(index)
 	if err != nil {
+		fmt.Println("l.log.Read 错误, index:", index, "firstIndex:", firstIndex, "lastIndex:", lastIndex, "err:", err)
 		return err
 	}
 	err = decodeMsgPack(read, log)
@@ -37,14 +42,21 @@ func (l *LogStoreImpl) GetLog(index uint64, log *raft.Log) error {
 }
 
 func (l *LogStoreImpl) StoreLog(log *raft.Log) error {
+	firstIndex, _ := l.log.FirstIndex()
+	lastIndex, _ := l.log.LastIndex()
+	fmt.Println("StoreLog, index:", log.Index, "firstIndex:", firstIndex, "lastIndex:", lastIndex)
 	pack, err := encodeMsgPack(log)
 	if err != nil {
+		fmt.Println("StoreLog error", err)
 		return err
 	}
 	return l.log.Write(log.Index, pack.Bytes())
 }
 
 func (l *LogStoreImpl) StoreLogs(logs []*raft.Log) error {
+	firstIndex, _ := l.log.FirstIndex()
+	lastIndex, _ := l.log.LastIndex()
+	fmt.Println("StoreLogs", logs[0].Index, "firstIndex:", firstIndex, "lastIndex:", lastIndex)
 	batch := new(wal.Batch)
 	for _, log := range logs {
 		pack, err := encodeMsgPack(log)
@@ -57,14 +69,17 @@ func (l *LogStoreImpl) StoreLogs(logs []*raft.Log) error {
 }
 
 func (l *LogStoreImpl) DeleteRange(min, max uint64) error {
-	err := l.log.TruncateFront(min)
+	//err := l.log.TruncateFront(max - min)
+	//if err != nil {
+	//	return err
+	//}
+	err := l.log.TruncateBack(min - 1)
 	if err != nil {
 		return err
 	}
-	err = l.log.TruncateBack(max)
-	if err != nil {
-		return err
-	}
+	firstIndex, _ := l.log.FirstIndex()
+	lastIndex, _ := l.log.LastIndex()
+	fmt.Println("DeleteRange success", "first", firstIndex, "last", lastIndex, "delete args", min, max)
 	return nil
 }
 
