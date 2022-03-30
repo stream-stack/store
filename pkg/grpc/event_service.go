@@ -86,17 +86,19 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 	param["streamId"] = meta[1]
 	param["eventId"] = meta[2]
 
-	evaluate, err := expression.Evaluate(param)
-	if err != nil {
-		return err
-	}
-	b, ok := evaluate.(bool)
-	if !ok {
-		return fmt.Errorf("表达式错误,返回值不为bool,当前返回值为:%+v", b)
-	}
+	if expression != nil {
+		evaluate, err := expression.Evaluate(param)
+		if err != nil {
+			return err
+		}
+		b, ok := evaluate.(bool)
+		if !ok {
+			return fmt.Errorf("表达式错误,返回值不为bool,当前返回值为:%+v", b)
+		}
 
-	if !b {
-		return nil
+		if !b {
+			return nil
+		}
 	}
 	logrus.Debugf("当前正在发送Index:%d", index)
 	return server.Send(&protocol.ReadResponse{

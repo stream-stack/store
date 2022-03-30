@@ -15,7 +15,7 @@ import (
 )
 
 func TestApply(t *testing.T) {
-	serviceConfig := `{"healthCheckConfig": {"serviceName": ""}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
+	serviceConfig := `{"healthCheckConfig": {"serviceName": "store"}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
 	retryOpts := []grpc_retry.CallOption{
 		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond)),
 		grpc_retry.WithMax(5),
@@ -53,7 +53,7 @@ func TestApply(t *testing.T) {
 }
 
 func TestSubscribe(t *testing.T) {
-	serviceConfig := `{"healthCheckConfig": {"serviceName": ""}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
+	serviceConfig := `{"healthCheckConfig": {"serviceName": "store"}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
 	retryOpts := []grpc_retry.CallOption{
 		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond)),
 		grpc_retry.WithMax(5),
@@ -73,7 +73,7 @@ func TestSubscribe(t *testing.T) {
 	go func() {
 		subscribe, err := client.Subscribe(todo, &protocol.SubscribeRequest{
 			SubscribeId: "1",
-			Regexp:      "streamName=~ '*+' && streamId =~ '*+' && eventId =~ '*+'",
+			Regexp:      "streamName=~ '[a-z]+' ",
 			Offset:      0,
 		})
 		if err != nil {
@@ -86,7 +86,7 @@ func TestSubscribe(t *testing.T) {
 			default:
 				recv, err := subscribe.Recv()
 				if err != nil {
-					//					panic(err)
+					panic(err)
 				}
 				fmt.Println(recv)
 			}
@@ -103,13 +103,14 @@ func TestSubscribe(t *testing.T) {
 			panic(err)
 		}
 		fmt.Println(apply)
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 5)
 	}
+	time.Sleep(time.Hour)
 	cancel()
 }
 
 func TestPut(t *testing.T) {
-	serviceConfig := `{"healthCheckConfig": {"serviceName": ""}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
+	serviceConfig := `{"healthCheckConfig": {"serviceName": "store"}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
 	retryOpts := []grpc_retry.CallOption{
 		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond)),
 		grpc_retry.WithMax(5),
@@ -135,7 +136,7 @@ func TestPut(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	serviceConfig := `{"healthCheckConfig": {"serviceName": ""}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
+	serviceConfig := `{"healthCheckConfig": {"serviceName": "store"}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
 	retryOpts := []grpc_retry.CallOption{
 		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond)),
 		grpc_retry.WithMax(5),
