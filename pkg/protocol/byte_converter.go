@@ -23,8 +23,8 @@ func AddKeyValueFlag(data []byte) []byte {
 	return tmp
 }
 
-func FormatApplyMeta(streamName string, streamId string, eventId string) []byte {
-	return []byte(fmt.Sprintf("%s/%s/%s", streamName, streamId, eventId))
+func FormatApplyMeta(streamName string, streamId string, eventId uint64) []byte {
+	return []byte(fmt.Sprintf("%s/%s/%d", streamName, streamId, eventId))
 }
 
 func ParseMeta(meta []byte) ([]string, error) {

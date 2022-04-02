@@ -80,11 +80,16 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 	if err != nil {
 		return err
 	}
+	parseUint, err := strconv.ParseUint(meta[2], 10, 64)
+	if err != nil {
+		return err
+	}
 	param := make(map[string]interface{})
 	entryData := log.Data[1:]
+
 	param["streamName"] = meta[0]
 	param["streamId"] = meta[1]
-	param["eventId"] = meta[2]
+	param["eventId"] = parseUint
 
 	if expression != nil {
 		evaluate, err := expression.Evaluate(param)
@@ -104,7 +109,7 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 	return server.Send(&protocol.ReadResponse{
 		StreamName: meta[0],
 		StreamId:   meta[1],
-		EventId:    meta[2],
+		EventId:    parseUint,
 		Data:       entryData,
 		Offset:     index,
 	})
@@ -143,10 +148,14 @@ func (e *EventService) Read(ctx context.Context, request *protocol.ReadRequest) 
 	if err != nil {
 		return nil, err
 	}
+	parseUint, err := strconv.ParseUint(meta[2], 10, 64)
+	if err != nil {
+		return nil, err
+	}
 	return &protocol.ReadResponse{
 		StreamName: meta[0],
 		StreamId:   meta[1],
-		EventId:    meta[2],
+		EventId:    parseUint,
 		Data:       log.Data[1:],
 		Offset:     dataIndex,
 	}, nil

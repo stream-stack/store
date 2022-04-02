@@ -34,7 +34,7 @@ func TestApply(t *testing.T) {
 	apply, err := client.Apply(todo, &protocol.ApplyRequest{
 		StreamName: "a",
 		StreamId:   "b",
-		EventId:    "2",
+		EventId:    2,
 		Data:       []byte(`test`),
 	})
 	if err != nil {
@@ -44,7 +44,7 @@ func TestApply(t *testing.T) {
 	get, err := client.Read(todo, &protocol.ReadRequest{
 		StreamName: "a",
 		StreamId:   "b",
-		EventId:    "c",
+		EventId:    2,
 	})
 	if err != nil {
 		panic(err)
@@ -96,7 +96,7 @@ func TestSubscribe(t *testing.T) {
 		apply, err := client.Apply(todo, &protocol.ApplyRequest{
 			StreamName: "a",
 			StreamId:   "b",
-			EventId:    fmt.Sprintf("%d", i),
+			EventId:    uint64(i),
 			Data:       []byte(fmt.Sprintf("%d-test", i)),
 		})
 		if err != nil {

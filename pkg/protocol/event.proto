@@ -20,7 +20,7 @@ message SubscribeRequest{
 message ApplyRequest {
   string streamName = 1;
   string streamId = 2;
-  string eventId = 3;
+  uint64 eventId = 3;
   bytes data = 4;
 }
 
@@ -34,14 +34,14 @@ message ApplyResponse{
 message ReadRequest {
   string streamName = 1;
   string streamId = 2;
-  string eventId = 3;
+  uint64 eventId = 3;
 }
 
 // 响应信息
 message ReadResponse {
   string streamName = 1;
   string streamId = 2;
-  string eventId = 3;
+  uint64 eventId = 3;
   bytes data = 4;
   uint64 offset = 5;
 }
