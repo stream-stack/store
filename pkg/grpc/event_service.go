@@ -17,6 +17,7 @@ type EventService struct {
 }
 
 func (e *EventService) Subscribe(request *protocol.SubscribeRequest, server protocol.EventService_SubscribeServer) error {
+	logrus.Debugf(`收到订阅请求%+v`, request)
 	var expression *govaluate.EvaluableExpression
 	var err error
 	if len(request.Regexp) != 0 {
@@ -90,9 +91,11 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 	param["streamName"] = meta[0]
 	param["streamId"] = meta[1]
 	param["eventId"] = parseUint
+	logrus.Debugf(`当前事件streamName:%v,streamId:%v,eventId:%d`, meta[0], meta[1], parseUint)
 
 	if expression != nil {
 		evaluate, err := expression.Evaluate(param)
+		logrus.Debugf(`表达式 %s 执行结果:%v`, expression.String(), evaluate)
 		if err != nil {
 			return err
 		}
@@ -116,6 +119,7 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 }
 
 func (e *EventService) Apply(ctx context.Context, request *protocol.ApplyRequest) (*protocol.ApplyResponse, error) {
+	logrus.Debugf(`收到apply StreamName:%v,StreamId:%v,EventId:%v`, request.StreamName, request.StreamId, request.EventId)
 	applyFuture := raft.Raft.ApplyLog(hraft.Log{
 		Data:       protocol.AddApplyFlag(request.Data),
 		Extensions: protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId),
