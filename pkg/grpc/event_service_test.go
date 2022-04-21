@@ -5,7 +5,7 @@ import (
 	"fmt"
 	_ "github.com/Jille/grpc-multi-resolver"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"github.com/stream-stack/store/pkg/protocol"
+	protocol "github.com/stream-stack/common/protocol/store"
 	"google.golang.org/grpc"
 	_ "google.golang.org/grpc/health"
 	"google.golang.org/grpc/status"
