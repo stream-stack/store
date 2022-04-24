@@ -14,6 +14,53 @@ import (
 	"time"
 )
 
+func eventExecutor(f func(ctx context.Context, client protocol.EventServiceClient)) {
+	todo := context.TODO()
+	serviceConfig := `{"healthCheckConfig": {"serviceName": "store"}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
+	retryOpts := []grpc_retry.CallOption{
+		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond)),
+		grpc_retry.WithMax(5),
+	}
+	conn, err := grpc.Dial("multi:///localhost:2001,localhost:2002,localhost:2003",
+		grpc.WithDefaultServiceConfig(serviceConfig), grpc.WithInsecure(),
+		grpc.WithDefaultCallOptions(grpc.WaitForReady(true)),
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(retryOpts...)))
+	if err != nil {
+		log.Fatalf("dialing failed: %v", err)
+	}
+	defer conn.Close()
+	client := protocol.NewEventServiceClient(conn)
+	f(todo, client)
+}
+
+func TestExistEventId(t *testing.T) {
+	//send exist event
+	eventExecutor(func(ctx context.Context, client protocol.EventServiceClient) {
+		apply, err := client.Apply(ctx, &protocol.ApplyRequest{
+			StreamName: "a",
+			StreamId:   "b",
+			EventId:    2,
+			Data:       []byte(`test`),
+		})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(apply)
+	})
+	eventExecutor(func(ctx context.Context, client protocol.EventServiceClient) {
+		apply, err := client.Apply(ctx, &protocol.ApplyRequest{
+			StreamName: "a",
+			StreamId:   "b",
+			EventId:    2,
+			Data:       []byte(`test1`),
+		})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(apply)
+	})
+}
+
 func TestApply(t *testing.T) {
 	serviceConfig := `{"healthCheckConfig": {"serviceName": "store"}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
 	retryOpts := []grpc_retry.CallOption{

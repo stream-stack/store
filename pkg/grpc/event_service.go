@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/Knetic/govaluate"
@@ -10,6 +11,7 @@ import (
 	"github.com/stream-stack/store/pkg/index"
 	"github.com/stream-stack/store/pkg/raft"
 	"github.com/stream-stack/store/pkg/wal"
+	"github.com/syndtr/goleveldb/leveldb"
 	"strconv"
 )
 
@@ -120,49 +122,99 @@ func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeS
 
 func (e *EventService) Apply(ctx context.Context, request *protocol.ApplyRequest) (*protocol.ApplyResponse, error) {
 	logrus.Debugf(`收到apply StreamName:%v,StreamId:%v,EventId:%v`, request.StreamName, request.StreamId, request.EventId)
-	applyFuture := raft.Raft.ApplyLog(hraft.Log{
-		Data:       protocol.AddApplyFlag(request.Data),
-		Extensions: protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId),
-	}, applyLogTimeout)
-	if err := applyFuture.Error(); err != nil {
+
+	data, offset, err := readData(request.StreamName, request.StreamId, request.EventId)
+	if err != nil && leveldb.ErrNotFound == err {
+		applyFuture := raft.Raft.ApplyLog(hraft.Log{
+			Data:       protocol.AddApplyFlag(request.Data),
+			Extensions: protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId),
+		}, applyLogTimeout)
+		if err := applyFuture.Error(); err != nil {
+			return &protocol.ApplyResponse{
+				Ack:     true,
+				Message: err.Error(),
+			}, err
+		}
 		return &protocol.ApplyResponse{
 			Ack:     true,
+			Message: strconv.FormatUint(applyFuture.Index(), 10),
+		}, nil
+	}
+
+	if err != nil {
+		return &protocol.ApplyResponse{
+			Ack:     false,
 			Message: err.Error(),
 		}, err
 	}
+	//判断data与request.Data是否相等
+	if bytes.Equal(data, request.Data) {
+		return &protocol.ApplyResponse{
+			Ack:     true,
+			Message: strconv.FormatUint(offset, 10),
+		}, nil
+	}
+	err = fmt.Errorf("event exist,offset is %d", offset)
 	return &protocol.ApplyResponse{
-		Ack:     true,
-		Message: strconv.FormatUint(applyFuture.Index(), 10),
-	}, nil
+		Ack:     false,
+		Message: err.Error(),
+	}, err
 }
 
-func (e *EventService) Read(ctx context.Context, request *protocol.ReadRequest) (*protocol.ReadResponse, error) {
-	key := protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId)
+func readData(streamName, streamId string, eventId uint64) (data []byte, offset uint64, err error) {
+	key := protocol.FormatApplyMeta(streamName, streamId, eventId)
 	get, err := index.KVDb.Get(key, nil)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	dataIndex := protocol.BytesToUint64(get)
 	log := &hraft.Log{}
 	err = wal.LogStore.GetLog(dataIndex, log)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	meta, err := protocol.ParseMeta(log.Extensions)
-	if err != nil {
-		return nil, err
-	}
-	parseUint, err := strconv.ParseUint(meta[2], 10, 64)
+	return log.Data[1:], dataIndex, nil
+}
+
+func (e *EventService) Read(ctx context.Context, request *protocol.ReadRequest) (*protocol.ReadResponse, error) {
+	data, offset, err := readData(request.StreamName, request.StreamId, request.EventId)
 	if err != nil {
 		return nil, err
 	}
 	return &protocol.ReadResponse{
-		StreamName: meta[0],
-		StreamId:   meta[1],
-		EventId:    parseUint,
-		Data:       log.Data[1:],
-		Offset:     dataIndex,
+		StreamName: request.StreamName,
+		StreamId:   request.StreamId,
+		EventId:    request.EventId,
+		Data:       data,
+		Offset:     offset,
 	}, nil
+
+	//key := protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId)
+	//get, err := index.KVDb.Get(key, nil)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//dataIndex := protocol.BytesToUint64(get)
+	//log := &hraft.Log{}
+	//err = wal.LogStore.GetLog(dataIndex, log)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//meta, err := protocol.ParseMeta(log.Extensions)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//parseUint, err := strconv.ParseUint(meta[2], 10, 64)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//return &protocol.ReadResponse{
+	//	StreamName: meta[0],
+	//	StreamId:   meta[1],
+	//	EventId:    parseUint,
+	//	Data:       log.Data[1:],
+	//	Offset:     dataIndex,
+	//}, nil
 }
 
 func NewEventService() protocol.EventServiceServer {
