@@ -15,7 +15,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
-	github.com/stream-stack/common v0.0.0-20220421070712-2526d2a799aa
+	github.com/stream-stack/common v0.0.0-20220425094351-f70adc721e64
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/tidwall/wal v1.1.7
 	google.golang.org/grpc v1.44.0
