@@ -52,7 +52,7 @@ func TestExistEventId(t *testing.T) {
 			StreamName: "a",
 			StreamId:   "b",
 			EventId:    2,
-			Data:       []byte(`test1`),
+			Data:       []byte(`test`),
 		})
 		if err != nil {
 			panic(err)
@@ -62,41 +62,17 @@ func TestExistEventId(t *testing.T) {
 }
 
 func TestApply(t *testing.T) {
-	serviceConfig := `{"healthCheckConfig": {"serviceName": "store"}, "loadBalancingConfig": [ { "round_robin": {} } ]}`
-	retryOpts := []grpc_retry.CallOption{
-		grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond)),
-		grpc_retry.WithMax(5),
-	}
-	conn, err := grpc.Dial("multi:///localhost:2001,localhost:2002,localhost:2003",
-		grpc.WithDefaultServiceConfig(serviceConfig), grpc.WithInsecure(),
-		grpc.WithDefaultCallOptions(grpc.WaitForReady(true)),
-		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(retryOpts...)))
-	if err != nil {
-		log.Fatalf("dialing failed: %v", err)
-	}
-	defer conn.Close()
-	client := protocol.NewEventServiceClient(conn)
-
-	todo := context.TODO()
-	apply, err := client.Apply(todo, &protocol.ApplyRequest{
-		StreamName: "a",
-		StreamId:   "b",
-		EventId:    2,
-		Data:       []byte(`test`),
+	eventExecutor(func(ctx context.Context, client protocol.EventServiceClient) {
+		read, err := client.Read(ctx, &protocol.ReadRequest{
+			StreamName: "a",
+			StreamId:   "b",
+			EventId:    2,
+		})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(read)
 	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(apply)
-	get, err := client.Read(todo, &protocol.ReadRequest{
-		StreamName: "a",
-		StreamId:   "b",
-		EventId:    2,
-	})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(get)
 }
 
 func TestSubscribe(t *testing.T) {

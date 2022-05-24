@@ -5,31 +5,21 @@ import (
 	"fmt"
 	hraft "github.com/hashicorp/raft"
 	protocol "github.com/stream-stack/common/protocol/store"
-	"github.com/stream-stack/store/pkg/index"
 	"github.com/stream-stack/store/pkg/raft"
-	"github.com/syndtr/goleveldb/leveldb/errors"
-	"github.com/syndtr/goleveldb/leveldb/util"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"strconv"
 )
 
 type KVService struct {
 }
 
 func (K *KVService) GetRange(ctx context.Context, request *protocol.GetRequest) (*protocol.GetRangeResponse, error) {
-	iterator := index.KVDb.NewIterator(util.BytesPrefix(request.Key), nil)
-	defer iterator.Release()
-	responses := make([]*protocol.GetResponse, 0)
-	for iterator.Next() {
-		responses = append(responses, &protocol.GetResponse{Data: iterator.Value()})
-	}
-	return &protocol.GetRangeResponse{Response: responses}, nil
+	return nil, nil
 }
 
 func (K *KVService) Put(ctx context.Context, request *protocol.PutRequest) (*protocol.PutResponse, error) {
 	applyFuture := raft.Raft.ApplyLog(hraft.Log{
-		Data:       protocol.AddKeyValueFlag(request.Val),
+		Data:       request.Val,
 		Extensions: request.Key,
 	}, applyLogTimeout)
 	if err := applyFuture.Error(); err != nil {
@@ -39,20 +29,19 @@ func (K *KVService) Put(ctx context.Context, request *protocol.PutRequest) (*pro
 		}, err
 	}
 	return &protocol.PutResponse{
-		Ack:     true,
-		Message: strconv.FormatUint(applyFuture.Index(), 10),
+		Ack: true,
 	}, nil
 }
 
 func (K *KVService) Get(ctx context.Context, request *protocol.GetRequest) (*protocol.GetResponse, error) {
-	get, err := index.KVDb.Get(request.Key, nil)
+	data, _, err := raft.GetLogByKey(request.Key)
 	if err != nil {
-		if err == errors.ErrNotFound {
+		if err == raft.ErrKeyNotFound {
 			return &protocol.GetResponse{}, status.Error(codes.NotFound, fmt.Sprintf("key %s not found", request.Key))
 		}
 		return &protocol.GetResponse{}, status.Error(codes.Unknown, err.Error())
 	}
-	return &protocol.GetResponse{Data: get}, nil
+	return &protocol.GetResponse{Data: data}, nil
 }
 
 func NewKVService() protocol.KVServiceServer {

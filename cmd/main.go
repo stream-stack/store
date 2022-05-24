@@ -7,10 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stream-stack/store/pkg/config"
 	"github.com/stream-stack/store/pkg/grpc"
-	"github.com/stream-stack/store/pkg/index"
 	"github.com/stream-stack/store/pkg/raft"
-	"github.com/stream-stack/store/pkg/snapshot"
-	"github.com/stream-stack/store/pkg/wal"
 	"os"
 	"os/signal"
 )
@@ -32,12 +29,7 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logrus.SetLevel(logrus.TraceLevel)
-			if err := wal.StartWalEngine(ctx); err != nil {
-				return err
-			}
-			if err := index.StartFSM(ctx); err != nil {
-				return err
-			}
+			go raft.StartNotify(ctx)
 			if err := raft.StartRaft(ctx); err != nil {
 				return err
 			}
@@ -51,10 +43,7 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 	}
 	config.InitFlags()
 	grpc.InitFlags()
-	index.InitFlags()
 	raft.InitFlags()
-	snapshot.InitFlags()
-	wal.InitFlags()
 
 	viper.AutomaticEnv()
 	viper.AddConfigPath(`.`)

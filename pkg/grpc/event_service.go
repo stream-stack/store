@@ -8,10 +8,7 @@ import (
 	hraft "github.com/hashicorp/raft"
 	"github.com/sirupsen/logrus"
 	protocol "github.com/stream-stack/common/protocol/store"
-	"github.com/stream-stack/store/pkg/index"
 	"github.com/stream-stack/store/pkg/raft"
-	"github.com/stream-stack/store/pkg/wal"
-	"github.com/syndtr/goleveldb/leveldb"
 	"strconv"
 )
 
@@ -29,105 +26,96 @@ func (e *EventService) Subscribe(request *protocol.SubscribeRequest, server prot
 		}
 	}
 	var start = request.Offset
+	id := request.SubscribeId
 	if start == 0 {
+		logrus.Debugf("subscribe:%v,set start to 1", id)
 		start = 1
 	}
-	for {
-		logrus.Debugf("当前offset:%d", start)
-		//注册channel
-		c := make(chan struct{})
-		index.NotifyCh <- c
-		logrus.Debugf("Subscribe.已注册channel")
-		lastIndex, err := wal.LogStore.LastIndex()
+	filter := func(log *hraft.Log) (bool, error) {
+		if expression == nil {
+			return true, nil
+		}
+		meta, err := protocol.ParseMeta(log.Extensions)
 		if err != nil {
-			logrus.Errorf("获取LastIndex error:%v", err)
-			return err
+			logrus.Errorf("key %s parse meta error:%v,skip", log.Extensions, err)
+			return false, nil
 		}
-		logrus.Debugf("当前lastIndex:%d", lastIndex)
-		for ; start <= lastIndex; start++ {
-			select {
-			case <-server.Context().Done():
-				return server.Context().Err()
-			default:
-				if err := sendSubscribeResponse(start, server, expression); err != nil {
-					logrus.Errorf("sendSubscribeResponse error:%v", err)
-					return err
-				}
-			}
+		eventId, err := strconv.ParseUint(meta[2], 10, 64)
+		if err != nil {
+			return false, err
 		}
-		logrus.Debugf("赋值后,当前offset:%d", lastIndex)
-		select {
-		case <-server.Context().Done():
-			return server.Context().Err()
-		case <-c:
-			logrus.Debugf("Subscribe.收到notify")
-		}
-	}
-}
+		param := make(map[string]interface{})
+		param["streamName"] = meta[0]
+		param["streamId"] = meta[1]
+		param["eventId"] = eventId
+		logrus.Debugf(`当前事件streamName:%v,streamId:%v,eventId:%d`, meta[0], meta[1], eventId)
 
-func sendSubscribeResponse(index uint64, server protocol.EventService_SubscribeServer, expression *govaluate.EvaluableExpression) error {
-	logrus.Debugf("当前正在发送Index:%d", index)
-	//index = index + 1
-	log := &hraft.Log{}
-	err := wal.LogStore.GetLog(index, log)
-	if err != nil {
-		return err
-	}
-	if log.Type != hraft.LogCommand {
-		return nil
-	}
-	if log.Data[0] == protocol.KeyValue {
-		return nil
-	}
-	meta, err := protocol.ParseMeta(log.Extensions)
-	if err != nil {
-		return err
-	}
-	parseUint, err := strconv.ParseUint(meta[2], 10, 64)
-	if err != nil {
-		return err
-	}
-	param := make(map[string]interface{})
-	entryData := log.Data[1:]
-
-	param["streamName"] = meta[0]
-	param["streamId"] = meta[1]
-	param["eventId"] = parseUint
-	logrus.Debugf(`当前事件streamName:%v,streamId:%v,eventId:%d`, meta[0], meta[1], parseUint)
-
-	if expression != nil {
 		evaluate, err := expression.Evaluate(param)
 		logrus.Debugf(`表达式 %s 执行结果:%v`, expression.String(), evaluate)
 		if err != nil {
-			return err
+			return false, err
 		}
 		b, ok := evaluate.(bool)
 		if !ok {
-			return fmt.Errorf("表达式错误,返回值不为bool,当前返回值为:%+v", b)
+			return false, fmt.Errorf("表达式错误,返回值不为bool,当前返回值为:%+v", b)
 		}
 
-		if !b {
+		return b, nil
+	}
+	handler := func(key, value []byte, version uint64) error {
+		start = version
+		meta, err := protocol.ParseMeta(key)
+		if err != nil {
+			logrus.Errorf("key %s parse meta error:%v,skip", key, err)
 			return nil
 		}
+		parseUint, err := strconv.ParseUint(meta[2], 10, 64)
+		if err != nil {
+			return err
+		}
+		param := make(map[string]interface{})
+		param["streamName"] = meta[0]
+		param["streamId"] = meta[1]
+		param["eventId"] = parseUint
+
+		return server.Send(&protocol.ReadResponse{
+			StreamName: meta[0],
+			StreamId:   meta[1],
+			EventId:    parseUint,
+			Data:       value,
+			Offset:     version,
+		})
 	}
-	logrus.Debugf("当前正在发送Index:%d", index)
-	return server.Send(&protocol.ReadResponse{
-		StreamName: meta[0],
-		StreamId:   meta[1],
-		EventId:    parseUint,
-		Data:       entryData,
-		Offset:     index,
-	})
+	for {
+		logrus.Debugf("subscribe:%v,offset:%d", id, start)
+		//注册channel
+		notify := raft.Wait(filter, id)
+		logrus.Debugf("subscribe:%v,registed notify channel", id)
+
+		if err := raft.Iterator([]byte(""), start, filter, handler); err != nil {
+			logrus.Errorf("subscribe:%v,iterator error:%v", id, err)
+			return err
+		}
+		logrus.Debugf("subscribe:%v,iterator done,wait new event", id)
+
+		select {
+		case <-server.Context().Done():
+			return server.Context().Err()
+		case <-notify:
+			logrus.Debugf("subscribe:%v,notify channel receive", id)
+		}
+	}
 }
 
 func (e *EventService) Apply(ctx context.Context, request *protocol.ApplyRequest) (*protocol.ApplyResponse, error) {
-	logrus.Debugf(`收到apply StreamName:%v,StreamId:%v,EventId:%v`, request.StreamName, request.StreamId, request.EventId)
+	logrus.Debugf(`apply StreamName:%v,StreamId:%v,EventId:%v`, request.StreamName, request.StreamId, request.EventId)
+	key := protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId)
+	data, offset, err := raft.GetLogByKey(key)
 
-	data, offset, err := readData(request.StreamName, request.StreamId, request.EventId)
-	if err != nil && leveldb.ErrNotFound == err {
+	if err != nil && raft.ErrKeyNotFound == err {
 		applyFuture := raft.Raft.ApplyLog(hraft.Log{
-			Data:       protocol.AddApplyFlag(request.Data),
-			Extensions: protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId),
+			Data:       request.Data,
+			Extensions: key,
 		}, applyLogTimeout)
 		if err := applyFuture.Error(); err != nil {
 			return &protocol.ApplyResponse{
@@ -136,8 +124,7 @@ func (e *EventService) Apply(ctx context.Context, request *protocol.ApplyRequest
 			}, err
 		}
 		return &protocol.ApplyResponse{
-			Ack:     true,
-			Message: strconv.FormatUint(applyFuture.Index(), 10),
+			Ack: true,
 		}, nil
 	}
 
@@ -161,23 +148,10 @@ func (e *EventService) Apply(ctx context.Context, request *protocol.ApplyRequest
 	}, err
 }
 
-func readData(streamName, streamId string, eventId uint64) (data []byte, offset uint64, err error) {
-	key := protocol.FormatApplyMeta(streamName, streamId, eventId)
-	get, err := index.KVDb.Get(key, nil)
-	if err != nil {
-		return nil, 0, err
-	}
-	dataIndex := protocol.BytesToUint64(get)
-	log := &hraft.Log{}
-	err = wal.LogStore.GetLog(dataIndex, log)
-	if err != nil {
-		return nil, 0, err
-	}
-	return log.Data[1:], dataIndex, nil
-}
-
 func (e *EventService) Read(ctx context.Context, request *protocol.ReadRequest) (*protocol.ReadResponse, error) {
-	data, offset, err := readData(request.StreamName, request.StreamId, request.EventId)
+	key := protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId)
+	logrus.Debugf(`read StreamName:%v,StreamId:%v,EventId:%v`, request.StreamName, request.StreamId, request.EventId)
+	data, offset, err := raft.GetLogByKey(key)
 	if err != nil {
 		return nil, err
 	}
@@ -188,33 +162,6 @@ func (e *EventService) Read(ctx context.Context, request *protocol.ReadRequest) 
 		Data:       data,
 		Offset:     offset,
 	}, nil
-
-	//key := protocol.FormatApplyMeta(request.StreamName, request.StreamId, request.EventId)
-	//get, err := index.KVDb.Get(key, nil)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//dataIndex := protocol.BytesToUint64(get)
-	//log := &hraft.Log{}
-	//err = wal.LogStore.GetLog(dataIndex, log)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//meta, err := protocol.ParseMeta(log.Extensions)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//parseUint, err := strconv.ParseUint(meta[2], 10, 64)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//return &protocol.ReadResponse{
-	//	StreamName: meta[0],
-	//	StreamId:   meta[1],
-	//	EventId:    parseUint,
-	//	Data:       log.Data[1:],
-	//	Offset:     dataIndex,
-	//}, nil
 }
 
 func NewEventService() protocol.EventServiceServer {

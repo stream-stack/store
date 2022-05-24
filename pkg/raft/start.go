@@ -5,61 +5,60 @@ import (
 	"fmt"
 	transport "github.com/Jille/raft-grpc-transport"
 	"github.com/hashicorp/raft"
-	boltdb "github.com/hashicorp/raft-boltdb"
+	"github.com/sirupsen/logrus"
 	"github.com/stream-stack/store/pkg/config"
-	"github.com/stream-stack/store/pkg/index"
-	"github.com/stream-stack/store/pkg/snapshot"
-	"github.com/stream-stack/store/pkg/wal"
 	"google.golang.org/grpc"
 	"math"
 	"os"
-	"path/filepath"
 )
-
-const stable = "stable.dat"
 
 var Raft *raft.Raft
 var RaftManager *transport.Manager
+var Store *BadgerStore
 
 func StartRaft(ctx context.Context) error {
 	c := raft.DefaultConfig()
-	c.SnapshotThreshold = math.MaxUint64
-	if len(RaftId) <= 0 {
-		RaftId, _ = os.Hostname()
-	}
-	c.LocalID = raft.ServerID(RaftId)
 
-	ss, err := snapshot.NewSnapshotStore(ctx)
+	//TODO:配置
+	//TODO:快照配置
+
+	c.SnapshotThreshold = math.MaxUint64
+	if len(raftId) <= 0 {
+		raftId, _ = os.Hostname()
+	}
+	c.LocalID = raft.ServerID(raftId)
+	empty := isEmptyDir(dataDir)
+
+	ss, err := NewSnapshotStore(ctx)
 	if err != nil {
 		return err
 	}
 
-	stablePath := filepath.Join(config.DataDir, stable)
-	empty := isEmptyDir(stablePath)
-	sdb, err := boltdb.NewBoltStore(stablePath)
+	logrus.Debugf("dataDir:%s,empty:%v", dataDir, empty)
+	Store, err = NewBadgerStore(dataDir)
 	if err != nil {
-		return fmt.Errorf(`boltdb.NewBoltStore(%q): %v`, stablePath, err)
+		logrus.Debugf("new Badger Store error:%v", err)
+		return err
 	}
 
 	RaftManager = transport.New(raft.ServerAddress(config.Address), []grpc.DialOption{grpc.WithInsecure()})
-	Raft, err = raft.NewRaft(c, index.FSM, wal.LogStore, sdb, ss, RaftManager.Transport())
+	Raft, err = raft.NewRaft(c, &fsmImpl{}, Store, Store, ss, RaftManager.Transport())
 	if err != nil {
-		return fmt.Errorf(`raft.NewRaft: %v`, err)
+		return fmt.Errorf(`new raft instance error: %v`, err)
 	}
 
-	if Bootstrap && empty {
+	if bootstrap && empty {
 		cfg := raft.Configuration{
 			Servers: []raft.Server{
 				{
 					Suffrage: raft.Voter,
-					ID:       raft.ServerID(RaftId),
+					ID:       raft.ServerID(raftId),
 					Address:  raft.ServerAddress(config.Address),
 				},
 			},
 		}
-		f := Raft.BootstrapCluster(cfg)
-		if err := f.Error(); err != nil {
-			return fmt.Errorf("raft.Raft.BootstrapCluster: %v", err)
+		if err := Raft.BootstrapCluster(cfg).Error(); err != nil {
+			return fmt.Errorf("bootstarp raft instance error: %v", err)
 		}
 	}
 	return nil
