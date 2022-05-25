@@ -55,13 +55,13 @@ func (f *fsmImpl) Apply(log *raft.Log) interface{} {
 	return err
 }
 
-//TODO:实现构建快照
 func (f *fsmImpl) Snapshot() (raft.FSMSnapshot, error) {
 	return &FSMSnapshotImpl{}, nil
 }
 
 func (f *fsmImpl) Restore(closer io.ReadCloser) error {
-	return closer.Close()
+	defer closer.Close()
+	return Store.conn.Load(closer, 1024)
 }
 
 type FSMSnapshotImpl struct {
@@ -69,10 +69,17 @@ type FSMSnapshotImpl struct {
 
 func (F *FSMSnapshotImpl) Persist(sink raft.SnapshotSink) error {
 	defer sink.Close()
+	logrus.Debugf("begin snapshot persist")
+	backup, err := Store.conn.Backup(sink, 0)
+	if err != nil {
+		logrus.Errorf("backup error:%+v", err)
+		return err
+	}
+	logrus.Debugf("backup finish,backup:%+v", backup)
 
 	return nil
 }
 
 func (F *FSMSnapshotImpl) Release() {
-
+	logrus.Debugf("release snapshot")
 }
