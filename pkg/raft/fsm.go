@@ -7,6 +7,8 @@ import (
 	"io"
 )
 
+var fsmPrefix = []byte(`FSM:`)
+
 type fsmImpl struct {
 }
 
@@ -17,8 +19,11 @@ func (f *fsmImpl) Apply(log *raft.Log) interface{} {
 		return nil
 	}
 
+	keyBytes := make([]byte, len(log.Extensions)+len(fsmPrefix))
+	copy(keyBytes[:len(fsmPrefix)], fsmPrefix)
+	copy(keyBytes[len(fsmPrefix):], log.Extensions)
 	err := Store.conn.Update(func(txn *badger.Txn) error {
-		return txn.Set(log.Extensions, uint64ToBytes(log.Index))
+		return txn.Set(keyBytes, uint64ToBytes(log.Index))
 	})
 	if err != nil {
 		return err

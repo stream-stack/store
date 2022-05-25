@@ -54,16 +54,17 @@ func Iterator(prefix []byte, slice uint64,
 		options := badger.IteratorOptions{
 			SinceTs: slice,
 		}
-		if len(prefix) > 0 {
-			options.Prefix = prefix
-		}
+
+		options.Prefix = append(fsmPrefix, prefix...)
 		iterator := txn.NewIterator(options)
 		defer iterator.Close()
 		for iterator.Rewind(); iterator.Valid(); iterator.Next() {
 			item := iterator.Item()
 			version := item.Version()
 			log := &hraft.Log{}
-			log.Extensions = item.Key()
+			key := item.Key()
+			originKey := key[len(fsmPrefix):]
+			log.Extensions = originKey
 			b, err := filter(log)
 			if err != nil {
 				return err
@@ -71,7 +72,6 @@ func Iterator(prefix []byte, slice uint64,
 			if !b {
 				continue
 			}
-			key := item.Key()
 			offset, err := item.ValueCopy(nil)
 			if err != nil {
 				return err
@@ -87,7 +87,7 @@ func Iterator(prefix []byte, slice uint64,
 				return err
 			}
 
-			if err = handler(key, log.Data, version); err != nil {
+			if err = handler(originKey, log.Data, version); err != nil {
 				return err
 			}
 		}

@@ -37,7 +37,7 @@ func (e *EventService) Subscribe(request *protocol.SubscribeRequest, server prot
 		}
 		meta, err := protocol.ParseMeta(log.Extensions)
 		if err != nil {
-			logrus.Errorf("key %s parse meta error:%v,skip", log.Extensions, err)
+			logrus.Debugf("key %s parse meta error:%v,filter skip", log.Extensions, err)
 			return false, nil
 		}
 		eventId, err := strconv.ParseUint(meta[2], 10, 64)
@@ -66,7 +66,7 @@ func (e *EventService) Subscribe(request *protocol.SubscribeRequest, server prot
 		start = version
 		meta, err := protocol.ParseMeta(key)
 		if err != nil {
-			logrus.Errorf("key %s parse meta error:%v,skip", key, err)
+			logrus.Errorf("key %s parse meta error:%v,handler skip", key, err)
 			return nil
 		}
 		parseUint, err := strconv.ParseUint(meta[2], 10, 64)
