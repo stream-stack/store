@@ -8,8 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stream-stack/store/pkg/config"
 	"google.golang.org/grpc"
-	"math"
 	"os"
+	"path/filepath"
 )
 
 var Raft *raft.Raft
@@ -17,12 +17,11 @@ var RaftManager *transport.Manager
 var Store *BadgerStore
 
 func StartRaft(ctx context.Context) error {
+	dataDir = filepath.Join(baseDir, dataDir)
+	valueDir = filepath.Join(baseDir, valueDir)
+	snapshotDataDir = filepath.Join(baseDir, snapshotDataDir)
+
 	c := raft.DefaultConfig()
-
-	//TODO:配置
-	//TODO:快照配置
-
-	c.SnapshotThreshold = math.MaxUint64
 	if len(raftId) <= 0 {
 		raftId, _ = os.Hostname()
 	}
@@ -35,7 +34,7 @@ func StartRaft(ctx context.Context) error {
 	}
 
 	logrus.Debugf("dataDir:%s,empty:%v", dataDir, empty)
-	Store, err = NewBadgerStore(dataDir)
+	Store, err = NewBadgerStore()
 	if err != nil {
 		logrus.Debugf("new Badger Store error:%v", err)
 		return err

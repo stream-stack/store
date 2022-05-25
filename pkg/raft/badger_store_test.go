@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -35,12 +36,9 @@ func testBadgerStore(t testing.TB) (*BadgerStore, string) {
 	os.RemoveAll(path)
 
 	// Successfully creates and returns a store
-	badgerOpts := badger.DefaultOptions(path).WithLogger(nil)
-	store, err := New(Options{
-		Path:          path,
-		NoSync:        true,
-		BadgerOptions: &badgerOpts,
-	})
+	dataDir = filepath.Join(path, "data")
+	valueDir = filepath.Join(path, "value")
+	store, err := NewBadgerStore()
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
@@ -66,7 +64,7 @@ func TestBadgerStore_Implements(t *testing.T) {
 }
 
 func TestBadgerOptionsReadOnly(t *testing.T) {
-	store, path := testBadgerStore(t)
+	store, _ := testBadgerStore(t)
 	// Create the log
 	log := &raft.Log{
 		Data:  []byte("log1"),
@@ -78,13 +76,7 @@ func TestBadgerOptionsReadOnly(t *testing.T) {
 	}
 	store.Close()
 
-	defaultOpts := badger.DefaultOptions(path).WithLogger(nil)
-	options := Options{
-		Path:          path,
-		BadgerOptions: &defaultOpts,
-	}
-	options.BadgerOptions.ReadOnly = true
-	roStore, err := New(options)
+	roStore, err := NewBadgerStore()
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}

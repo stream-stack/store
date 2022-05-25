@@ -68,6 +68,8 @@ type FSMSnapshotImpl struct {
 }
 
 func (F *FSMSnapshotImpl) Persist(sink raft.SnapshotSink) error {
+	defer sink.Close()
+
 	return nil
 }
 

@@ -78,30 +78,15 @@ type Options struct {
 	GCThreshold int64
 }
 
-// NewBadgerStore takes a file path and returns a connected Raft backend.
-func NewBadgerStore(path string) (*BadgerStore, error) {
-	return New(Options{Path: path})
-}
-
-// func NewDefaultStableStore(path string) (*BadgerStore, error) {
-// 	opts := badger.DefaultOptions
-// 	opts.MaxLevels = 2
-// 	return New(Options{Path: path, BadgerOptions: &opts})
-// }
-
 // New uses the supplied options to open the Badger db and prepare it for
 // use as a raft backend.
-func New(options Options) (*BadgerStore, error) {
-
-	// build badger options
-	if options.BadgerOptions == nil {
-		defaultOpts := badger.DefaultOptions(options.Path)
-		options.BadgerOptions = &defaultOpts
-	}
-	options.BadgerOptions.SyncWrites = !options.NoSync
-
-	// Try to connect
-	handle, err := badger.Open(*options.BadgerOptions)
+func NewBadgerStore() (*BadgerStore, error) {
+	options := badger.DefaultOptions(dataDir)
+	options.ValueDir = valueDir
+	options.SyncWrites = badgerSync
+	options.MetricsEnabled = true
+	//options.Logger = &logrus.Logger{}
+	handle, err := badger.Open(options)
 	if err != nil {
 		return nil, err
 	}
@@ -109,24 +94,22 @@ func New(options Options) (*BadgerStore, error) {
 	// Create the new store
 	store := &BadgerStore{
 		conn: handle,
-		path: options.Path,
 	}
 
 	// Start GC routine
-	if options.ValueLogGC {
-
+	if badgerValueLogGC {
 		var gcInterval time.Duration
 		var mandatoryGCInterval time.Duration
 		var threshold int64
 
-		if gcInterval = 1 * time.Minute; options.GCInterval != 0 {
-			gcInterval = options.GCInterval
+		if gcInterval = 1 * time.Minute; badgerGCInterval != 0 {
+			gcInterval = badgerGCInterval
 		}
-		if mandatoryGCInterval = 10 * time.Minute; options.MandatoryGCInterval != 0 {
-			mandatoryGCInterval = options.MandatoryGCInterval
+		if mandatoryGCInterval = 10 * time.Minute; badgerMandatoryGCInterval != 0 {
+			mandatoryGCInterval = badgerMandatoryGCInterval
 		}
-		if threshold = int64(1 << 30); options.GCThreshold != 0 {
-			threshold = options.GCThreshold
+		if threshold = int64(1 << 30); badgerGCInterval != 0 {
+			threshold = badgerGCThreshold
 		}
 
 		store.vlogTicker = time.NewTicker(gcInterval)
