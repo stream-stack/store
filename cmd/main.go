@@ -7,9 +7,12 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stream-stack/store/pkg/config"
 	"github.com/stream-stack/store/pkg/grpc"
-	"github.com/stream-stack/store/pkg/raft"
+	"github.com/stream-stack/store/pkg/store"
+	"math/rand"
 	"os"
 	"os/signal"
+	"strings"
+	"time"
 )
 
 func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
@@ -29,8 +32,16 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logrus.SetLevel(logrus.TraceLevel)
-			go raft.StartNotify(ctx)
-			if err := raft.StartRaft(ctx); err != nil {
+			rand.Seed(time.Now().UnixNano())
+			logrus.Debug("[config]env print:")
+			for _, s := range os.Environ() {
+				if strings.HasPrefix(s, "STREAM_STORE") {
+					logrus.Debug(s)
+				}
+			}
+
+			logrus.Debugf("[config]dump config:%v", viper.AllSettings())
+			if err := store.Start(ctx); err != nil {
 				return err
 			}
 			if err := grpc.StartGrpc(ctx); err != nil {
@@ -41,13 +52,22 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 			return nil
 		},
 	}
-	config.InitFlags()
 	grpc.InitFlags()
-	raft.InitFlags()
+	store.InitFlags()
+	config.InitFlags()
 
-	viper.AutomaticEnv()
-	viper.AddConfigPath(`.`)
+	viper.AddConfigPath(`./config`)
+	viper.SetConfigName("config")
 	config.BuildFlags(command)
+	viper.SetEnvPrefix("stream_store")
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		logrus.Errorf("[config]read config error:%v", err)
+	}
+	if err := viper.BindPFlags(command.PersistentFlags()); err != nil {
+		logrus.Errorf("[config]BindPFlags config error:%v", err)
+	}
 
 	return command, ctx, cancelFunc
 }

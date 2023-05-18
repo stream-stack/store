@@ -3,33 +3,27 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"github.com/Jille/raft-grpc-leader-rpc/leaderhealth"
-	"github.com/Jille/raftadmin"
-	protocol "github.com/stream-stack/common/protocol/store"
-	"github.com/stream-stack/store/pkg/config"
-	"github.com/stream-stack/store/pkg/raft"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"github.com/stream-stack/store/pkg/cloudevents.io/genproto/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"net"
 )
 
 func StartGrpc(ctx context.Context) error {
-	_, port, err := net.SplitHostPort(config.Address)
+	Port := viper.GetString("Port")
+	logrus.Debugf("[grpc]grpc starting at port:%v", Port)
+	sock, err := net.Listen("tcp", fmt.Sprintf(":%s", Port))
 	if err != nil {
-		return fmt.Errorf("failed to parse local address (%q): %v", config.Address, err)
-	}
-	sock, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
-	if err != nil {
-		return fmt.Errorf("failed to listen: %v", err)
+		return fmt.Errorf("[grpc]failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
-	raft.RaftManager.Register(s)
-	leaderhealth.Setup(raft.Raft, s, []string{"store"})
-	raftadmin.Register(s, raft.Raft)
 	reflection.Register(s)
-	protocol.RegisterEventServiceServer(s, NewEventService())
-	protocol.RegisterKVServiceServer(s, NewKVService())
+	v1.RegisterStoreServer(s, NewStoreService())
+	//marshal, err := proto.Marshal(&v1.CloudEvent{})
+	//protocol.RegisterKVServiceServer(s, NewKVService())
 	go func() {
 		select {
 		case <-ctx.Done():
@@ -37,7 +31,7 @@ func StartGrpc(ctx context.Context) error {
 		}
 	}()
 	if err := s.Serve(sock); err != nil {
-		return fmt.Errorf("failed to serve: %v", err)
+		return fmt.Errorf("[grpc]failed to serve: %v", err)
 	}
 	return nil
 }

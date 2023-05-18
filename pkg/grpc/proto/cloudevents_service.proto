@@ -1,0 +1,22 @@
+syntax = "proto3";
+// 定义包名
+package proto;
+
+import "cloudevents.proto";
+
+option csharp_namespace = "CloudNative.CloudEvents.V1";
+option go_package = "cloudevents.io/genproto/v1";
+option java_package = "io.cloudevents.v1.proto";
+option java_multiple_files = true;
+option php_namespace = "Io\\CloudEvents\\V1\\Proto";
+option ruby_package = "Io::CloudEvents::V1::Proto";
+
+// CloudEvent存储服务
+service Store {
+  rpc Store (io.cloudevents.v1.CloudEvent) returns (CloudEventStoreResult) {}
+  rpc ReStore (io.cloudevents.v1.CloudEvent) returns (CloudEventStoreResult) {}
+}
+
+message CloudEventStoreResult {
+  string message = 1;
+}
