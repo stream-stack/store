@@ -21,9 +21,11 @@ func StartGrpc(ctx context.Context) error {
 
 	s := grpc.NewServer()
 	reflection.Register(s)
-	v1.RegisterStoreServer(s, NewStoreService())
-	//marshal, err := proto.Marshal(&v1.CloudEvent{})
-	//protocol.RegisterKVServiceServer(s, NewKVService())
+	service := newSubscriptionsService()
+	service.start(ctx)
+	v1.RegisterSubscriptionServer(s, service)
+	v1.RegisterStoreServer(s, newStoreService(service))
+	v1.RegisterKVServer(s, newKVService())
 	go func() {
 		select {
 		case <-ctx.Done():

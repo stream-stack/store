@@ -11,11 +11,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func NewStoreService() v12.StoreServer {
-	return &StoreService{}
+func newStoreService(subService *SubscriptionService) v12.StoreServer {
+	return &StoreService{subService: subService}
 }
 
 type StoreService struct {
+	subService *SubscriptionService
 }
 
 func (s *StoreService) ReStore(ctx context.Context, event *v12.CloudEvent) (*v12.CloudEventStoreResult, error) {
@@ -29,6 +30,7 @@ func (s *StoreService) ReStore(ctx context.Context, event *v12.CloudEvent) (*v12
 	}); err != nil {
 		return &v12.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
 	}
+	s.subService.notify()
 	return &v12.CloudEventStoreResult{}, nil
 }
 
@@ -54,9 +56,18 @@ func (s *StoreService) Store(ctx context.Context, event *v12.CloudEvent) (*v12.C
 	}); err != nil {
 		return &v12.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
 	}
+	s.subService.notify()
 	return &v12.CloudEventStoreResult{}, nil
 }
 
 func getKey(event *v12.CloudEvent) []byte {
-	return []byte(fmt.Sprintf("%s/%s", event.GetSource(), event.GetId()))
+	var prefix string
+	value, ok := event.GetAttributes()[StoreTypeKey]
+	if !ok {
+		prefix = CloudEventStoreTypeValue
+	} else {
+		prefix = value.GetCeString()
+	}
+
+	return []byte(fmt.Sprintf("%s/%s/%s/%s", prefix, event.GetType(), event.GetSource(), event.GetId()))
 }

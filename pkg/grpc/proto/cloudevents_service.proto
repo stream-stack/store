@@ -17,6 +17,31 @@ service Store {
   rpc ReStore (io.cloudevents.v1.CloudEvent) returns (CloudEventStoreResult) {}
 }
 
+// KV服务
+service KV {
+  rpc Get (KVGet) returns (CloudEventResponse) {}
+}
+
+message KVGet{
+  bytes key = 1;
+}
+
+// 订阅服务
+service Subscription {
+  rpc Subscribe (SubscribeRequest) returns (stream CloudEventResponse) {}
+}
+
+message SubscribeRequest{
+  optional string type = 1;
+  optional string event_type = 2;
+  optional uint64 offset = 3;
+}
+
+message CloudEventResponse{
+  uint64 offset = 1;
+  io.cloudevents.v1.CloudEvent event = 2;
+}
+
 message CloudEventStoreResult {
   string message = 1;
 }

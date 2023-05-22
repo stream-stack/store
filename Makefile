@@ -4,4 +4,4 @@ image-build:
 local:
 	cd cmd && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o store main.go &&cd .. && docker build -f Dockerfile-local -t ccr.ccs.tencentyun.com/stream/stream:store-v1.1 . && kind load docker-image ccr.ccs.tencentyun.com/stream/store:latest --name c1
 build-protobuf:
-	cd pkg/grpc/proto && protoc -I . -I ../ --go_out=plugins=grpc:../../ *.proto
+	cd pkg/grpc/proto && protoc -I . -I ../ --go_out=plugins=grpc:../../ *.proto && cd -

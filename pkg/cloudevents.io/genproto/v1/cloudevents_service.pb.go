@@ -26,6 +26,171 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type KVGet struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+}
+
+func (x *KVGet) Reset() {
+	*x = KVGet{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cloudevents_service_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *KVGet) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*KVGet) ProtoMessage() {}
+
+func (x *KVGet) ProtoReflect() protoreflect.Message {
+	mi := &file_cloudevents_service_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use KVGet.ProtoReflect.Descriptor instead.
+func (*KVGet) Descriptor() ([]byte, []int) {
+	return file_cloudevents_service_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *KVGet) GetKey() []byte {
+	if x != nil {
+		return x.Key
+	}
+	return nil
+}
+
+type SubscribeRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Type      *string `protobuf:"bytes,1,opt,name=type,proto3,oneof" json:"type,omitempty"`
+	EventType *string `protobuf:"bytes,2,opt,name=event_type,json=eventType,proto3,oneof" json:"event_type,omitempty"`
+	Offset    *uint64 `protobuf:"varint,3,opt,name=offset,proto3,oneof" json:"offset,omitempty"`
+}
+
+func (x *SubscribeRequest) Reset() {
+	*x = SubscribeRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cloudevents_service_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SubscribeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeRequest) ProtoMessage() {}
+
+func (x *SubscribeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_cloudevents_service_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeRequest.ProtoReflect.Descriptor instead.
+func (*SubscribeRequest) Descriptor() ([]byte, []int) {
+	return file_cloudevents_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *SubscribeRequest) GetType() string {
+	if x != nil && x.Type != nil {
+		return *x.Type
+	}
+	return ""
+}
+
+func (x *SubscribeRequest) GetEventType() string {
+	if x != nil && x.EventType != nil {
+		return *x.EventType
+	}
+	return ""
+}
+
+func (x *SubscribeRequest) GetOffset() uint64 {
+	if x != nil && x.Offset != nil {
+		return *x.Offset
+	}
+	return 0
+}
+
+type CloudEventResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Offset uint64      `protobuf:"varint,1,opt,name=offset,proto3" json:"offset,omitempty"`
+	Event  *CloudEvent `protobuf:"bytes,2,opt,name=event,proto3" json:"event,omitempty"`
+}
+
+func (x *CloudEventResponse) Reset() {
+	*x = CloudEventResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cloudevents_service_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CloudEventResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CloudEventResponse) ProtoMessage() {}
+
+func (x *CloudEventResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_cloudevents_service_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CloudEventResponse.ProtoReflect.Descriptor instead.
+func (*CloudEventResponse) Descriptor() ([]byte, []int) {
+	return file_cloudevents_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CloudEventResponse) GetOffset() uint64 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *CloudEventResponse) GetEvent() *CloudEvent {
+	if x != nil {
+		return x.Event
+	}
+	return nil
+}
+
 type CloudEventStoreResult struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -37,7 +202,7 @@ type CloudEventStoreResult struct {
 func (x *CloudEventStoreResult) Reset() {
 	*x = CloudEventStoreResult{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cloudevents_service_proto_msgTypes[0]
+		mi := &file_cloudevents_service_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -50,7 +215,7 @@ func (x *CloudEventStoreResult) String() string {
 func (*CloudEventStoreResult) ProtoMessage() {}
 
 func (x *CloudEventStoreResult) ProtoReflect() protoreflect.Message {
-	mi := &file_cloudevents_service_proto_msgTypes[0]
+	mi := &file_cloudevents_service_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -63,7 +228,7 @@ func (x *CloudEventStoreResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloudEventStoreResult.ProtoReflect.Descriptor instead.
 func (*CloudEventStoreResult) Descriptor() ([]byte, []int) {
-	return file_cloudevents_service_proto_rawDescGZIP(), []int{0}
+	return file_cloudevents_service_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CloudEventStoreResult) GetMessage() string {
@@ -79,7 +244,24 @@ var file_cloudevents_service_proto_rawDesc = []byte{
 	0x0a, 0x19, 0x63, 0x6c, 0x6f, 0x75, 0x64, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x5f, 0x73, 0x65,
 	0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x11, 0x63, 0x6c, 0x6f, 0x75, 0x64, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x31, 0x0a, 0x15, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x45, 0x76,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x19, 0x0a, 0x05, 0x4b, 0x56, 0x47, 0x65, 0x74, 0x12, 0x10,
+	0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x03, 0x6b, 0x65, 0x79,
+	0x22, 0x8f, 0x01, 0x0a, 0x10, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x17, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x48, 0x00, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x88, 0x01, 0x01, 0x12, 0x22,
+	0x0a, 0x0a, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x48, 0x01, 0x52, 0x09, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x54, 0x79, 0x70, 0x65, 0x88,
+	0x01, 0x01, 0x12, 0x1b, 0x0a, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x04, 0x48, 0x02, 0x52, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x88, 0x01, 0x01, 0x42,
+	0x07, 0x0a, 0x05, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x42, 0x0d, 0x0a, 0x0b, 0x5f, 0x65, 0x76, 0x65,
+	0x6e, 0x74, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x42, 0x09, 0x0a, 0x07, 0x5f, 0x6f, 0x66, 0x66, 0x73,
+	0x65, 0x74, 0x22, 0x61, 0x0a, 0x12, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x6f, 0x66, 0x66, 0x73,
+	0x65, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74,
+	0x12, 0x33, 0x0a, 0x05, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x1d, 0x2e, 0x69, 0x6f, 0x2e, 0x63, 0x6c, 0x6f, 0x75, 0x64, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73,
+	0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x05,
+	0x65, 0x76, 0x65, 0x6e, 0x74, 0x22, 0x31, 0x0a, 0x15, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x45, 0x76,
 	0x65, 0x6e, 0x74, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x18,
 	0x0a, 0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x32, 0x99, 0x01, 0x0a, 0x05, 0x53, 0x74, 0x6f,
@@ -92,16 +274,25 @@ var file_cloudevents_service_proto_rawDesc = []byte{
 	0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x45,
 	0x76, 0x65, 0x6e, 0x74, 0x1a, 0x1c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x43, 0x6c, 0x6f,
 	0x75, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x73, 0x75,
-	0x6c, 0x74, 0x22, 0x00, 0x42, 0x8b, 0x01, 0x0a, 0x17, 0x69, 0x6f, 0x2e, 0x63, 0x6c, 0x6f, 0x75,
-	0x64, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x50, 0x01, 0x5a, 0x1a, 0x63, 0x6c, 0x6f, 0x75, 0x64, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x2e,
-	0x69, 0x6f, 0x2f, 0x67, 0x65, 0x6e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x76, 0x31, 0xaa, 0x02,
-	0x1a, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x4e, 0x61, 0x74, 0x69, 0x76, 0x65, 0x2e, 0x43, 0x6c, 0x6f,
-	0x75, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x17, 0x49, 0x6f,
-	0x5c, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x5c,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0xea, 0x02, 0x1a, 0x49, 0x6f, 0x3a, 0x3a, 0x43, 0x6c, 0x6f, 0x75,
-	0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x3a, 0x3a, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6c, 0x74, 0x22, 0x00, 0x32, 0x36, 0x0a, 0x02, 0x4b, 0x56, 0x12, 0x30, 0x0a, 0x03, 0x47, 0x65,
+	0x74, 0x12, 0x0c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4b, 0x56, 0x47, 0x65, 0x74, 0x1a,
+	0x19, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x45, 0x76, 0x65,
+	0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x32, 0x53, 0x0a, 0x0c,
+	0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x43, 0x0a, 0x09,
+	0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x12, 0x17, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x19, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x43, 0x6c, 0x6f, 0x75, 0x64,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x30,
+	0x01, 0x42, 0x8b, 0x01, 0x0a, 0x17, 0x69, 0x6f, 0x2e, 0x63, 0x6c, 0x6f, 0x75, 0x64, 0x65, 0x76,
+	0x65, 0x6e, 0x74, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
+	0x1a, 0x63, 0x6c, 0x6f, 0x75, 0x64, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x2e, 0x69, 0x6f, 0x2f,
+	0x67, 0x65, 0x6e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x76, 0x31, 0xaa, 0x02, 0x1a, 0x43, 0x6c,
+	0x6f, 0x75, 0x64, 0x4e, 0x61, 0x74, 0x69, 0x76, 0x65, 0x2e, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x73, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x17, 0x49, 0x6f, 0x5c, 0x43, 0x6c,
+	0x6f, 0x75, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x5c, 0x56, 0x31, 0x5c, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0xea, 0x02, 0x1a, 0x49, 0x6f, 0x3a, 0x3a, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x73, 0x3a, 0x3a, 0x56, 0x31, 0x3a, 0x3a, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -116,21 +307,29 @@ func file_cloudevents_service_proto_rawDescGZIP() []byte {
 	return file_cloudevents_service_proto_rawDescData
 }
 
-var file_cloudevents_service_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_cloudevents_service_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_cloudevents_service_proto_goTypes = []interface{}{
-	(*CloudEventStoreResult)(nil), // 0: proto.CloudEventStoreResult
-	(*CloudEvent)(nil),            // 1: io.cloudevents.v1.CloudEvent
+	(*KVGet)(nil),                 // 0: proto.KVGet
+	(*SubscribeRequest)(nil),      // 1: proto.SubscribeRequest
+	(*CloudEventResponse)(nil),    // 2: proto.CloudEventResponse
+	(*CloudEventStoreResult)(nil), // 3: proto.CloudEventStoreResult
+	(*CloudEvent)(nil),            // 4: io.cloudevents.v1.CloudEvent
 }
 var file_cloudevents_service_proto_depIdxs = []int32{
-	1, // 0: proto.Store.Store:input_type -> io.cloudevents.v1.CloudEvent
-	1, // 1: proto.Store.ReStore:input_type -> io.cloudevents.v1.CloudEvent
-	0, // 2: proto.Store.Store:output_type -> proto.CloudEventStoreResult
-	0, // 3: proto.Store.ReStore:output_type -> proto.CloudEventStoreResult
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: proto.CloudEventResponse.event:type_name -> io.cloudevents.v1.CloudEvent
+	4, // 1: proto.Store.Store:input_type -> io.cloudevents.v1.CloudEvent
+	4, // 2: proto.Store.ReStore:input_type -> io.cloudevents.v1.CloudEvent
+	0, // 3: proto.KV.Get:input_type -> proto.KVGet
+	1, // 4: proto.Subscription.Subscribe:input_type -> proto.SubscribeRequest
+	3, // 5: proto.Store.Store:output_type -> proto.CloudEventStoreResult
+	3, // 6: proto.Store.ReStore:output_type -> proto.CloudEventStoreResult
+	2, // 7: proto.KV.Get:output_type -> proto.CloudEventResponse
+	2, // 8: proto.Subscription.Subscribe:output_type -> proto.CloudEventResponse
+	5, // [5:9] is the sub-list for method output_type
+	1, // [1:5] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_cloudevents_service_proto_init() }
@@ -141,6 +340,42 @@ func file_cloudevents_service_proto_init() {
 	file_cloudevents_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_cloudevents_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*KVGet); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cloudevents_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SubscribeRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cloudevents_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CloudEventResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cloudevents_service_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*CloudEventStoreResult); i {
 			case 0:
 				return &v.state
@@ -153,15 +388,16 @@ func file_cloudevents_service_proto_init() {
 			}
 		}
 	}
+	file_cloudevents_service_proto_msgTypes[1].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cloudevents_service_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   4,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   3,
 		},
 		GoTypes:           file_cloudevents_service_proto_goTypes,
 		DependencyIndexes: file_cloudevents_service_proto_depIdxs,
@@ -286,5 +522,176 @@ var _Store_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
+	Metadata: "cloudevents_service.proto",
+}
+
+// KVClient is the client API for KV service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type KVClient interface {
+	Get(ctx context.Context, in *KVGet, opts ...grpc.CallOption) (*CloudEventResponse, error)
+}
+
+type kVClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewKVClient(cc grpc.ClientConnInterface) KVClient {
+	return &kVClient{cc}
+}
+
+func (c *kVClient) Get(ctx context.Context, in *KVGet, opts ...grpc.CallOption) (*CloudEventResponse, error) {
+	out := new(CloudEventResponse)
+	err := c.cc.Invoke(ctx, "/proto.KV/Get", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// KVServer is the server API for KV service.
+type KVServer interface {
+	Get(context.Context, *KVGet) (*CloudEventResponse, error)
+}
+
+// UnimplementedKVServer can be embedded to have forward compatible implementations.
+type UnimplementedKVServer struct {
+}
+
+func (*UnimplementedKVServer) Get(context.Context, *KVGet) (*CloudEventResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+
+func RegisterKVServer(s *grpc.Server, srv KVServer) {
+	s.RegisterService(&_KV_serviceDesc, srv)
+}
+
+func _KV_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KVGet)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KVServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.KV/Get",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KVServer).Get(ctx, req.(*KVGet))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _KV_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.KV",
+	HandlerType: (*KVServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Get",
+			Handler:    _KV_Get_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "cloudevents_service.proto",
+}
+
+// SubscriptionClient is the client API for Subscription service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type SubscriptionClient interface {
+	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (Subscription_SubscribeClient, error)
+}
+
+type subscriptionClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSubscriptionClient(cc grpc.ClientConnInterface) SubscriptionClient {
+	return &subscriptionClient{cc}
+}
+
+func (c *subscriptionClient) Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (Subscription_SubscribeClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Subscription_serviceDesc.Streams[0], "/proto.Subscription/Subscribe", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &subscriptionSubscribeClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Subscription_SubscribeClient interface {
+	Recv() (*CloudEventResponse, error)
+	grpc.ClientStream
+}
+
+type subscriptionSubscribeClient struct {
+	grpc.ClientStream
+}
+
+func (x *subscriptionSubscribeClient) Recv() (*CloudEventResponse, error) {
+	m := new(CloudEventResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// SubscriptionServer is the server API for Subscription service.
+type SubscriptionServer interface {
+	Subscribe(*SubscribeRequest, Subscription_SubscribeServer) error
+}
+
+// UnimplementedSubscriptionServer can be embedded to have forward compatible implementations.
+type UnimplementedSubscriptionServer struct {
+}
+
+func (*UnimplementedSubscriptionServer) Subscribe(*SubscribeRequest, Subscription_SubscribeServer) error {
+	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
+}
+
+func RegisterSubscriptionServer(s *grpc.Server, srv SubscriptionServer) {
+	s.RegisterService(&_Subscription_serviceDesc, srv)
+}
+
+func _Subscription_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SubscribeRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(SubscriptionServer).Subscribe(m, &subscriptionSubscribeServer{stream})
+}
+
+type Subscription_SubscribeServer interface {
+	Send(*CloudEventResponse) error
+	grpc.ServerStream
+}
+
+type subscriptionSubscribeServer struct {
+	grpc.ServerStream
+}
+
+func (x *subscriptionSubscribeServer) Send(m *CloudEventResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _Subscription_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.Subscription",
+	HandlerType: (*SubscriptionServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Subscribe",
+			Handler:       _Subscription_Subscribe_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "cloudevents_service.proto",
 }
