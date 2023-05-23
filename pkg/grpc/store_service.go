@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/golang/protobuf/proto"
-	v12 "github.com/stream-stack/store/pkg/cloudevents.io/genproto/v1"
+	"github.com/stream-stack/common"
+	v1 "github.com/stream-stack/common/cloudevents.io/genproto/v1"
 	"github.com/stream-stack/store/pkg/store"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func newStoreService(subService *SubscriptionService) v12.StoreServer {
+func newStoreService(subService *SubscriptionService) v1.StoreServer {
 	return &StoreService{subService: subService}
 }
 
@@ -19,7 +20,7 @@ type StoreService struct {
 	subService *SubscriptionService
 }
 
-func (s *StoreService) ReStore(ctx context.Context, event *v12.CloudEvent) (*v12.CloudEventStoreResult, error) {
+func (s *StoreService) ReStore(ctx context.Context, event *v1.CloudEvent) (*v1.CloudEventStoreResult, error) {
 	key := getKey(event)
 	if err := store.KvStore.Update(func(txn *badger.Txn) error {
 		marshal, err := proto.Marshal(event)
@@ -28,13 +29,13 @@ func (s *StoreService) ReStore(ctx context.Context, event *v12.CloudEvent) (*v12
 		}
 		return txn.Set(key, marshal)
 	}); err != nil {
-		return &v12.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
+		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
 	}
 	s.subService.notify()
-	return &v12.CloudEventStoreResult{}, nil
+	return &v1.CloudEventStoreResult{}, nil
 }
 
-func (s *StoreService) Store(ctx context.Context, event *v12.CloudEvent) (*v12.CloudEventStoreResult, error) {
+func (s *StoreService) Store(ctx context.Context, event *v1.CloudEvent) (*v1.CloudEventStoreResult, error) {
 	key := getKey(event)
 	if err := store.KvStore.Update(func(txn *badger.Txn) error {
 		_, err := txn.Get(key)
@@ -54,17 +55,17 @@ func (s *StoreService) Store(ctx context.Context, event *v12.CloudEvent) (*v12.C
 		}
 		return nil
 	}); err != nil {
-		return &v12.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
+		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
 	}
 	s.subService.notify()
-	return &v12.CloudEventStoreResult{}, nil
+	return &v1.CloudEventStoreResult{}, nil
 }
 
-func getKey(event *v12.CloudEvent) []byte {
+func getKey(event *v1.CloudEvent) []byte {
 	var prefix string
-	value, ok := event.GetAttributes()[StoreTypeKey]
+	value, ok := event.GetAttributes()[common.StoreTypeKey]
 	if !ok {
-		prefix = CloudEventStoreTypeValue
+		prefix = common.CloudEventStoreTypeValue
 	} else {
 		prefix = value.GetCeString()
 	}

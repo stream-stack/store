@@ -6,7 +6,8 @@ import (
 	"github.com/dgraph-io/badger/v4"
 	"github.com/golang/protobuf/proto"
 	"github.com/sirupsen/logrus"
-	v12 "github.com/stream-stack/store/pkg/cloudevents.io/genproto/v1"
+	"github.com/stream-stack/common"
+	v1 "github.com/stream-stack/common/cloudevents.io/genproto/v1"
 	"github.com/stream-stack/store/pkg/store"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -24,7 +25,7 @@ type SubscriptionService struct {
 	op          chan func([]chan interface{})
 }
 
-func (s *SubscriptionService) Subscribe(request *v12.SubscribeRequest, server v12.Subscription_SubscribeServer) error {
+func (s *SubscriptionService) Subscribe(request *v1.SubscribeRequest, server v1.Subscription_SubscribeServer) error {
 	var offset uint64
 	if request.Offset != nil {
 		offset = request.GetOffset()
@@ -48,7 +49,7 @@ func (s *SubscriptionService) Subscribe(request *v12.SubscribeRequest, server v1
 	}
 }
 
-func iter(prefix []byte, offset uint64, server v12.Subscription_SubscribeServer) error {
+func iter(prefix []byte, offset uint64, server v1.Subscription_SubscribeServer) error {
 	handler := func(txn *badger.Txn) error {
 		options := badger.DefaultIteratorOptions
 		options.SinceTs = offset
@@ -57,14 +58,14 @@ func iter(prefix []byte, offset uint64, server v12.Subscription_SubscribeServer)
 		defer iterator.Close()
 		for iterator.Rewind(); iterator.Valid(); iterator.Next() {
 			item := iterator.Item()
-			event := &v12.CloudEvent{}
+			event := &v1.CloudEvent{}
 			if err := item.Value(func(val []byte) error {
 				return proto.Unmarshal(val, event)
 			}); err != nil {
 				logrus.Errorf("[subscribe]key:%s , unmarshal value error:%v", item.Key(), err.Error())
 				return status.Error(codes.Internal, err.Error())
 			}
-			if err := server.Send(&v12.SubscribeResponse{
+			if err := server.Send(&v1.CloudEventResponse{
 				Offset: item.Version(),
 				Event:  event,
 			}); err != nil {
@@ -81,8 +82,8 @@ func iter(prefix []byte, offset uint64, server v12.Subscription_SubscribeServer)
 	return nil
 }
 
-func getSubscribePrefix(request *v12.SubscribeRequest) []byte {
-	tp := CloudEventStoreTypeValue
+func getSubscribePrefix(request *v1.SubscribeRequest) []byte {
+	tp := common.CloudEventStoreTypeValue
 	if request.Type == nil {
 		tp = request.GetType()
 	}

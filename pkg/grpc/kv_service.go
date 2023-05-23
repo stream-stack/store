@@ -4,21 +4,21 @@ import (
 	"context"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/golang/protobuf/proto"
-	v12 "github.com/stream-stack/store/pkg/cloudevents.io/genproto/v1"
+	v1 "github.com/stream-stack/common/cloudevents.io/genproto/v1"
 	"github.com/stream-stack/store/pkg/store"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func newKVService() v12.KVServer {
+func newKVService() v1.KVServer {
 	return &KVService{}
 }
 
 type KVService struct {
 }
 
-func (K *KVService) Get(ctx context.Context, get *v12.KVGet) (*v12.CloudEventResponse, error) {
-	v := &v12.CloudEvent{}
+func (K *KVService) Get(ctx context.Context, get *v1.KVGet) (*v1.CloudEventResponse, error) {
+	v := &v1.CloudEvent{}
 	var offset uint64
 	if err := store.KvStore.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(get.GetKey())
@@ -36,7 +36,7 @@ func (K *KVService) Get(ctx context.Context, get *v12.KVGet) (*v12.CloudEventRes
 		}
 		return nil, status.Error(errCode, err.Error())
 	}
-	return &v12.CloudEventResponse{
+	return &v1.CloudEventResponse{
 		Offset: offset,
 		Event:  v,
 	}, nil

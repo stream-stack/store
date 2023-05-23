@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"github.com/stream-stack/store/pkg/cloudevents.io/genproto/v1"
+	v1 "github.com/stream-stack/common/cloudevents.io/genproto/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"net"
