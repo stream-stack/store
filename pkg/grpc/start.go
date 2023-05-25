@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/viper"
 	v1 "github.com/stream-stack/common/cloudevents.io/genproto/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 	"net"
 )
@@ -26,6 +28,10 @@ func StartGrpc(ctx context.Context) error {
 	v1.RegisterSubscriptionServer(s, service)
 	v1.RegisterStoreServer(s, newStoreService(service))
 	v1.RegisterKVServer(s, newKVService())
+
+	hsrv := health.NewServer()
+	hsrv.SetServingStatus("store", grpc_health_v1.HealthCheckResponse_SERVING)
+	grpc_health_v1.RegisterHealthServer(s, hsrv)
 	go func() {
 		select {
 		case <-ctx.Done():

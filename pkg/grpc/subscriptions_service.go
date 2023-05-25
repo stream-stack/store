@@ -65,6 +65,7 @@ func iter(prefix []byte, offset uint64, server v1.Subscription_SubscribeServer) 
 				logrus.Errorf("[subscribe]key:%s , unmarshal value error:%v", item.Key(), err.Error())
 				return status.Error(codes.Internal, err.Error())
 			}
+			logrus.Debugf("[subscribe]send cloudevent:{%+v}", event)
 			if err := server.Send(&v1.CloudEventResponse{
 				Offset: item.Version(),
 				Event:  event,
@@ -84,7 +85,7 @@ func iter(prefix []byte, offset uint64, server v1.Subscription_SubscribeServer) 
 
 func getSubscribePrefix(request *v1.SubscribeRequest) []byte {
 	tp := common.CloudEventStoreTypeValue
-	if request.Type == nil {
+	if request.Type != nil {
 		tp = request.GetType()
 	}
 	if request.EventType == nil {
