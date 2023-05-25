@@ -5,6 +5,7 @@ import (
 	"github.com/dgraph-io/badger/v4"
 	"github.com/golang/protobuf/proto"
 	v1 "github.com/stream-stack/common/cloudevents.io/genproto/v1"
+	"github.com/stream-stack/common/util"
 	"github.com/stream-stack/store/pkg/store"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,8 +21,9 @@ type KVService struct {
 func (K *KVService) Get(ctx context.Context, get *v1.KVGet) (*v1.CloudEventResponse, error) {
 	v := &v1.CloudEvent{}
 	var offset uint64
+	key := util.FormatKeyWithGet(get)
 	if err := store.KvStore.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(get.GetKey())
+		item, err := txn.Get(key)
 		if err != nil {
 			return err
 		}

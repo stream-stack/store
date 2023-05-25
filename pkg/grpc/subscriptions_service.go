@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/golang/protobuf/proto"
 	"github.com/sirupsen/logrus"
@@ -11,6 +10,7 @@ import (
 	"github.com/stream-stack/store/pkg/store"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"regexp"
 )
 
 func newSubscriptionsService() *SubscriptionService {
@@ -31,12 +31,16 @@ func (s *SubscriptionService) Subscribe(request *v1.SubscribeRequest, server v1.
 		offset = request.GetOffset()
 	}
 	prefix := getSubscribePrefix(request)
+	filter, err := getEventTypeReg(request)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
 	for {
 		notify := s.registerSubscriber()
 		logrus.Debugf("[subscribe]register subscriber{type:%v,eventType:%v,offset:%v} success",
-			request.GetType(), request.GetEventType(), offset)
+			request.GetType(), request.GetEventTypeReg(), offset)
 
-		if err := iter(prefix, offset, server); err != nil {
+		if err := iter(prefix, offset, server, filter); err != nil {
 			return err
 		}
 
@@ -49,7 +53,14 @@ func (s *SubscriptionService) Subscribe(request *v1.SubscribeRequest, server v1.
 	}
 }
 
-func iter(prefix []byte, offset uint64, server v1.Subscription_SubscribeServer) error {
+func getEventTypeReg(request *v1.SubscribeRequest) (*regexp.Regexp, error) {
+	if request.EventTypeReg == nil {
+		return nil, nil
+	}
+	return regexp.Compile(request.GetEventTypeReg())
+}
+
+func iter(prefix []byte, offset uint64, server v1.Subscription_SubscribeServer, filter *regexp.Regexp) error {
 	handler := func(txn *badger.Txn) error {
 		options := badger.DefaultIteratorOptions
 		options.SinceTs = offset
@@ -64,6 +75,10 @@ func iter(prefix []byte, offset uint64, server v1.Subscription_SubscribeServer) 
 			}); err != nil {
 				logrus.Errorf("[subscribe]key:%s , unmarshal value error:%v", item.Key(), err.Error())
 				return status.Error(codes.Internal, err.Error())
+			}
+			if filter != nil && !filter.MatchString(event.GetType()) {
+				logrus.Debugf("[subscribe]event type %s not match subscribe type regexp, skip", event.GetType())
+				continue
 			}
 			logrus.Debugf("[subscribe]send cloudevent:{%+v}", event)
 			if err := server.Send(&v1.CloudEventResponse{
@@ -88,10 +103,7 @@ func getSubscribePrefix(request *v1.SubscribeRequest) []byte {
 	if request.Type != nil {
 		tp = request.GetType()
 	}
-	if request.EventType == nil {
-		return []byte(tp)
-	}
-	return []byte(fmt.Sprintf(`%s/%s`, tp, request.GetEventType()))
+	return []byte(tp)
 }
 
 func (s *SubscriptionService) start(ctx context.Context) {

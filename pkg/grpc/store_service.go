@@ -3,10 +3,8 @@ package grpc
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/golang/protobuf/proto"
-	"github.com/stream-stack/common"
 	v1 "github.com/stream-stack/common/cloudevents.io/genproto/v1"
 	"github.com/stream-stack/common/util"
 	"github.com/stream-stack/store/pkg/store"
@@ -23,7 +21,7 @@ type StoreService struct {
 }
 
 func (s *StoreService) ReStore(ctx context.Context, event *v1.CloudEvent) (*v1.CloudEventStoreResult, error) {
-	key := getKey(event)
+	key := util.FormatKeyWithEvent(event)
 	marshal, err := proto.Marshal(event)
 	if err != nil {
 		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
@@ -37,7 +35,7 @@ func (s *StoreService) ReStore(ctx context.Context, event *v1.CloudEvent) (*v1.C
 }
 
 func (s *StoreService) Store(ctx context.Context, event *v1.CloudEvent) (*v1.CloudEventStoreResult, error) {
-	key := getKey(event)
+	key := util.FormatKeyWithEvent(event)
 	marshal, err := proto.Marshal(event)
 	if err != nil {
 		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
@@ -61,16 +59,4 @@ func (s *StoreService) Store(ctx context.Context, event *v1.CloudEvent) (*v1.Clo
 	}
 	s.subService.notify()
 	return &v1.CloudEventStoreResult{}, nil
-}
-
-func getKey(event *v1.CloudEvent) []byte {
-	var prefix string
-	value, ok := event.GetAttributes()[common.StoreTypeKey]
-	if !ok {
-		prefix = common.CloudEventStoreTypeValue
-	} else {
-		prefix = value.GetCeString()
-	}
-
-	return []byte(fmt.Sprintf("%s/%s/%s/%s", prefix, event.GetType(), event.GetSource(), event.GetId()))
 }
