@@ -1,7 +1,6 @@
 package grpc
 
 import (
-	"bytes"
 	"context"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/golang/protobuf/proto"
@@ -35,7 +34,8 @@ func (s *StoreService) ReStore(ctx context.Context, event *v1.CloudEvent) (*v1.C
 }
 
 func (s *StoreService) Store(ctx context.Context, event *v1.CloudEvent) (*v1.CloudEventStoreResult, error) {
-	if _, err := util.FormatKeyWithEvent(event); err != nil {
+	logicKey, err := util.FormatKeyWithEvent(event)
+	if err != nil {
 		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
 	}
 	key := util.FormatKeyWithEventTimestamp(event)
@@ -43,18 +43,33 @@ func (s *StoreService) Store(ctx context.Context, event *v1.CloudEvent) (*v1.Clo
 	if err != nil {
 		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
 	}
+	var item *badger.Item
 	if err = store.KvStore.Update(func(txn *badger.Txn) error {
-		if item, err := txn.Get(key); err != nil {
+		if item, err = txn.Get(logicKey); err != nil {
 			if err != badger.ErrKeyNotFound {
 				return err
 			}
 			return txn.Set(key, marshal)
 		} else {
-			return item.Value(func(val []byte) error {
-				if !bytes.Equal(marshal, val) {
-					return util.EventExists
+			var logicItem *badger.Item
+			if err = item.Value(func(val []byte) error {
+				logicItem, err = txn.Get(val)
+				if err != nil {
+					return err
 				}
 				return nil
+			}); err != nil {
+				return err
+			}
+			return logicItem.Value(func(val []byte) error {
+				equal, err := util.EventEqual(marshal, val)
+				if err != nil {
+					return err
+				}
+				if equal {
+					return nil
+				}
+				return util.EventExists
 			})
 		}
 	}); err != nil {
