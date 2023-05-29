@@ -35,17 +35,20 @@ func (s *SubscriptionService) Subscribe(request *v1.SubscribeRequest, server v1.
 	if err != nil {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
+	logrus.Debugf("[subscribe]begin subscribe, param:{type:%v,eventType:%v,offset:%v}",
+		request.GetType(), request.GetEventTypeReg(), offset)
+	return s.subscribe(&grpcSubscribeHandler{server: server}, offset, prefix, filter)
+}
+
+func (s *SubscriptionService) subscribe(handler subscribeHandler, offset uint64, prefix []byte, filter *regexp.Regexp) error {
 	for {
 		notify := s.registerSubscriber()
-		logrus.Debugf("[subscribe]register subscriber{type:%v,eventType:%v,offset:%v} success",
-			request.GetType(), request.GetEventTypeReg(), offset)
-
-		if err := iter(prefix, offset, server, filter); err != nil {
+		if err := iter(prefix, offset, handler, filter); err != nil {
 			return err
 		}
 
 		select {
-		case <-server.Context().Done():
+		case <-handler.context().Done():
 			return nil
 		case <-notify:
 			logrus.Debugf("[subscribe]notify subscriber,do send data")
@@ -60,11 +63,13 @@ func getEventTypeReg(request *v1.SubscribeRequest) (*regexp.Regexp, error) {
 	return regexp.Compile(request.GetEventTypeReg())
 }
 
-func iter(prefix []byte, offset uint64, server v1.Subscription_SubscribeServer, filter *regexp.Regexp) error {
-	handler := func(txn *badger.Txn) error {
+func iter(prefix []byte, offset uint64, handler subscribeHandler, filter *regexp.Regexp) error {
+	it := func(txn *badger.Txn) error {
 		options := badger.DefaultIteratorOptions
 		options.SinceTs = offset
-		options.Prefix = prefix
+		if prefix != nil && len(prefix) > 0 {
+			options.Prefix = prefix
+		}
 		iterator := txn.NewIterator(options)
 		defer iterator.Close()
 		for iterator.Rewind(); iterator.Valid(); iterator.Next() {
@@ -81,17 +86,19 @@ func iter(prefix []byte, offset uint64, server v1.Subscription_SubscribeServer, 
 				continue
 			}
 			logrus.Debugf("[subscribe]send cloudevent:{%+v}", event)
-			if err := server.Send(&v1.CloudEventResponse{
+
+			resp := &v1.CloudEventResponse{
 				Offset: item.Version(),
 				Event:  event,
-			}); err != nil {
+			}
+			if err := handler.handler(resp); err != nil {
 				logrus.Errorf("[subscribe]key:%s,send cloudevent error:%v", item.Key(), err.Error())
 				return status.Error(codes.Internal, err.Error())
 			}
 		}
 		return nil
 	}
-	if err := store.KvStore.View(handler); err != nil {
+	if err := store.KvStore.View(it); err != nil {
 		logrus.Errorf("[subscribe]iterator event error:%v", err)
 		return status.Error(codes.Internal, err.Error())
 	}

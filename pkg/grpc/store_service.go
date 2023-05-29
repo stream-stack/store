@@ -21,7 +21,7 @@ type StoreService struct {
 }
 
 func (s *StoreService) ReStore(ctx context.Context, event *v1.CloudEvent) (*v1.CloudEventStoreResult, error) {
-	key := util.FormatKeyWithEvent(event)
+	key := util.FormatKeyWithEventTimestamp(event)
 	marshal, err := proto.Marshal(event)
 	if err != nil {
 		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
@@ -35,7 +35,7 @@ func (s *StoreService) ReStore(ctx context.Context, event *v1.CloudEvent) (*v1.C
 }
 
 func (s *StoreService) Store(ctx context.Context, event *v1.CloudEvent) (*v1.CloudEventStoreResult, error) {
-	key := util.FormatKeyWithEvent(event)
+	key := util.FormatKeyWithEventTimestamp(event)
 	marshal, err := proto.Marshal(event)
 	if err != nil {
 		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())

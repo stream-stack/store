@@ -27,8 +27,19 @@ func (K *KVService) Get(ctx context.Context, get *v1.KVGet) (*v1.CloudEventRespo
 		if err != nil {
 			return err
 		}
-		offset = item.Version()
-		return item.Value(func(val []byte) error {
+		var originKey []byte
+		if err := item.Value(func(val []byte) error {
+			originKey = val
+			return nil
+		}); err != nil {
+			return err
+		}
+		i, err := txn.Get(originKey)
+		if err != nil {
+			return err
+		}
+		offset = i.Version()
+		return i.Value(func(val []byte) error {
 			return proto.Unmarshal(val, v)
 		})
 	}); err != nil {
