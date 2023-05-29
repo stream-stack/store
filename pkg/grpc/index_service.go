@@ -23,7 +23,10 @@ func (i *indexService) context() context.Context {
 }
 
 func (i *indexService) handler(response *v1.CloudEventResponse) error {
-	key := util.FormatKeyWithEvent(response.Event)
+	key, err := util.FormatKeyWithEvent(response.Event)
+	if err != nil {
+		return err
+	}
 	val := util.FormatKeyWithEventTimestamp(response.Event)
 	logrus.Debugf("[grpc][index]index event:%s,val:%s", key, val)
 	return store.KvStore.Update(func(txn *badger.Txn) error {
