@@ -23,17 +23,14 @@ func StartGrpc(ctx context.Context) error {
 
 	s := grpc.NewServer()
 	reflection.Register(s)
-	sbService := newSubscriptionsService()
-	sbService.start(ctx)
-	v1.RegisterSubscriptionServer(s, sbService)
-	v1.RegisterStoreServer(s, newStoreService(sbService))
-	v1.RegisterKVServer(s, newKVService())
-	indexSv := indexService{
-		SubscriptionService: sbService,
-	}
-	if err := indexSv.Start(ctx); err != nil {
+	keyValueService := newPrivateKeyValueServiceServer()
+	eventService := newPublicEventServiceServer()
+	eventService.startSubscribeServer(ctx)
+	if err := eventService.startIndexServer(ctx, keyValueService); err != nil {
 		return err
 	}
+	v1.RegisterPrivateKeyValueServiceServer(s, keyValueService)
+	v1.RegisterPublicEventServiceServer(s, eventService)
 
 	hsrv := health.NewServer()
 	hsrv.SetServingStatus("store", grpc_health_v1.HealthCheckResponse_SERVING)

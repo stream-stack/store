@@ -12,8 +12,11 @@ import (
 	"time"
 )
 
+const LocalIndexOffsetKey = "LocalIndexOffset"
+
 type indexService struct {
-	*SubscriptionService
+	evsvc  *EventService
+	kvsvc  *KeyValueService
 	offset uint64
 	ctx    context.Context
 }
@@ -36,21 +39,12 @@ func (i *indexService) handler(response *v1.CloudEventResponse) error {
 
 func (i *indexService) Start(ctx context.Context) error {
 	i.ctx = ctx
-	//read offset from store
-	if err := store.KvStore.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte("LocalIndexOffset"))
-		if err != nil {
-			if badger.ErrKeyNotFound == err {
-				return nil
-			}
-			return err
-		}
-		return item.Value(func(val []byte) error {
-			i.offset = util.BytesToUint64(val)
-			return nil
-		})
-	}); err != nil {
+	get, err := i.kvsvc.Get(ctx, &v1.GetRequest{Key: []byte(LocalIndexOffsetKey)})
+	if err != nil {
 		return err
+	}
+	if get.Value != nil {
+		i.offset = util.BytesToUint64(get.Value)
 	}
 
 	interval := viper.GetDuration(`OffsetStoreInterval`)
@@ -63,6 +57,7 @@ func (i *indexService) Start(ctx context.Context) error {
 
 func (i *indexService) saveOffsetWithInterval(ctx context.Context, interval time.Duration) {
 	ticker := time.NewTicker(interval)
+	prevOffset := i.offset
 	go func() {
 		defer ticker.Stop()
 		for {
@@ -70,12 +65,19 @@ func (i *indexService) saveOffsetWithInterval(ctx context.Context, interval time
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
+				if prevOffset == i.offset {
+					logrus.Debugf("[grpc][index]offset not change,skip save offset to store")
+					continue
+				}
 				//save offset to store
-				if err := store.KvStore.Update(func(txn *badger.Txn) error {
-					return txn.Set([]byte("LocalIndexOffset"), util.Uint64ToBytes(i.offset))
-				}); err != nil {
+				_, err := i.kvsvc.Put(ctx, &v1.PutRequest{
+					Key:   []byte(LocalIndexOffsetKey),
+					Value: util.Uint64ToBytes(i.offset),
+				})
+				if err != nil {
 					logrus.Errorf("[grpc][index]save offset to store error: %s", err.Error())
 				}
+				prevOffset = i.offset
 			}
 		}
 	}()
@@ -83,7 +85,7 @@ func (i *indexService) saveOffsetWithInterval(ctx context.Context, interval time
 
 func (i *indexService) startStoreServiceEventHandler() {
 	go func() {
-		err := i.subscribe(i, i.offset, []byte(common.StoreTypeValuePrefix), nil)
+		err := i.evsvc.subscribe(i, i.offset, []byte(common.StoreTypeValuePrefix), nil)
 		if err != nil {
 			logrus.Errorf("[grpc][index]start subscribe store service events error: %s", err.Error())
 		}

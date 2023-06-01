@@ -11,7 +11,7 @@ type subscribeHandler interface {
 }
 
 type grpcSubscribeHandler struct {
-	server v1.Subscription_SubscribeServer
+	server v1.PublicEventService_SubscribeServer
 }
 
 func (g *grpcSubscribeHandler) context() context.Context {
@@ -20,17 +20,4 @@ func (g *grpcSubscribeHandler) context() context.Context {
 
 func (g *grpcSubscribeHandler) handler(response *v1.CloudEventResponse) error {
 	return g.server.Send(response)
-}
-
-type indexSubscribeHandler struct {
-	ctx context.Context
-}
-
-func (i *indexSubscribeHandler) context() context.Context {
-	return i.ctx
-}
-
-func (i *indexSubscribeHandler) handler(response *v1.CloudEventResponse) error {
-	//TODO:建立索引
-	return nil
 }
