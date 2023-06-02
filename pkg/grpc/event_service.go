@@ -167,7 +167,7 @@ func getEventTypeReg(request *v1.SubscribeRequest) (*regexp.Regexp, error) {
 func iter(prefix []byte, offset uint64, handler subscribeHandler, filter *regexp.Regexp) (uint64, error) {
 	it := func(txn *badger.Txn) error {
 		options := badger.DefaultIteratorOptions
-		options.SinceTs = offset
+		options.SinceTs = offset + 1
 		if prefix != nil && len(prefix) > 0 {
 			options.Prefix = prefix
 		}

@@ -56,7 +56,7 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 	store.InitFlags()
 	config.InitFlags()
 
-	viper.AddConfigPath(`./config`)
+	viper.AddConfigPath(`./conf`)
 	viper.SetConfigName("config")
 	config.BuildFlags(command)
 	viper.SetEnvPrefix("stream_store")
