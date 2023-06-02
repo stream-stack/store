@@ -1,12 +1,11 @@
-FROM tangxusc/golang:1.18.1 as builder
+FROM golang:1.20.4 as builder
 
-ENV GOPROXY="https://goproxy.io,direct"
+ENV GOPROXY="https://goproxy.cn,direct"
 WORKDIR /workspace
-COPY * .
-
-# Build
-#RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o store main.go
-RUN go build -a -o store cmd/main.go
+COPY . /workspace/
+RUN unset HTTPS_PROXY;unset HTTP_PROXY;unset http_proxy;unset https_proxy;go mod download
+RUN unset HTTPS_PROXY;unset HTTP_PROXY;unset http_proxy;unset https_proxy;go get github.com/stream-stack/common
+RUN unset HTTPS_PROXY;unset HTTP_PROXY;unset http_proxy;unset https_proxy;go build -o store cmd/main.go
 
 FROM ubuntu:latest
 WORKDIR /
