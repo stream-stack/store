@@ -17,7 +17,7 @@ import (
 func newPublicEventServiceServer() *EventService {
 	return &EventService{
 		subscribers: make([]chan interface{}, 0),
-		op:          make(chan func([]chan interface{}), 0),
+		op:          make(chan func([]chan interface{})),
 	}
 }
 
@@ -36,9 +36,16 @@ func (s *EventService) Subscribe(request *v1.SubscribeRequest, server v1.PublicE
 	if err != nil {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
-	logrus.Debugf("[subscribe]begin subscribe, param:{type:%v,eventType:%v,offset:%v}",
+	logrus.Debugf("[SubscribeWithHandler]begin SubscribeWithHandler, param:{type:%v,eventType:%v,offset:%v}",
 		request.GetType(), request.GetEventTypeReg(), offset)
-	return s.subscribe(&grpcSubscribeHandler{server: server}, offset, prefix, filter)
+	handler := &grpcSubscribeHandler{server: server}
+
+	return s.SubscribeWithHandler(handler, func(options badger.IteratorOptions) badger.IteratorOptions {
+		options.Prefix = prefix
+		options.SinceTs = offset + 1
+		options.AllVersions = false
+		return options
+	}, filter)
 }
 
 func (s *EventService) Get(ctx context.Context, get *v1.EventGetRequest) (*v1.CloudEventResponse, error) {
@@ -138,21 +145,25 @@ func (s *EventService) Store(ctx context.Context, event *v1.CloudEvent) (*v1.Clo
 	return &v1.CloudEventStoreResult{}, nil
 }
 
-func (s *EventService) subscribe(handler subscribeHandler, offset uint64, prefix []byte, filter *regexp.Regexp) error {
-	current := offset
+func (s *EventService) SubscribeWithHandler(handler subscribeHandler, custom func(options badger.IteratorOptions) badger.IteratorOptions, filter *regexp.Regexp) error {
+	options := badger.DefaultIteratorOptions
+	if custom != nil {
+		options = custom(options)
+	}
+	current := options.SinceTs
 	var err error
 	for {
 		notify := s.registerSubscriber()
-		logrus.Debugf("[subscribe]begin subscribe, param:{offset:%v}", current)
-		if current, err = iter(prefix, current, handler, filter); err != nil {
+		logrus.Debugf("[SubscribeWithHandler]begin SubscribeWithHandler, param:{offset:%v}", current)
+		if current, err = iter(options, handler, filter); err != nil {
 			return err
 		}
 
 		select {
-		case <-handler.context().Done():
+		case <-handler.Context().Done():
 			return nil
 		case <-notify:
-			logrus.Debugf("[subscribe]notify subscriber,do send data")
+			logrus.Debugf("[SubscribeWithHandler]notify subscriber,do send data")
 		}
 	}
 }
@@ -164,36 +175,37 @@ func getEventTypeReg(request *v1.SubscribeRequest) (*regexp.Regexp, error) {
 	return regexp.Compile(request.GetEventTypeReg())
 }
 
-func iter(prefix []byte, offset uint64, handler subscribeHandler, filter *regexp.Regexp) (uint64, error) {
+func iter(option badger.IteratorOptions, handler subscribeHandler, filter *regexp.Regexp) (uint64, error) {
+	var offset uint64
 	it := func(txn *badger.Txn) error {
-		options := badger.DefaultIteratorOptions
-		options.SinceTs = offset + 1
-		if prefix != nil && len(prefix) > 0 {
-			options.Prefix = prefix
-		}
-		iterator := txn.NewIterator(options)
+		iterator := txn.NewIterator(option)
+		offset = option.SinceTs
 		defer iterator.Close()
 		for iterator.Rewind(); iterator.Valid(); iterator.Next() {
 			item := iterator.Item()
 			event := &v1.CloudEvent{}
 			if err := item.Value(func(val []byte) error {
+				if len(val) == 0 {
+					return nil
+				}
 				return proto.Unmarshal(val, event)
 			}); err != nil {
-				logrus.Errorf("[subscribe]key:%s , unmarshal value error:%v", item.Key(), err.Error())
+				logrus.Errorf("[SubscribeWithHandler]key:%s , unmarshal value error:%v", item.Key(), err.Error())
 				return status.Error(codes.Internal, err.Error())
 			}
 			if filter != nil && !filter.MatchString(event.GetType()) {
-				logrus.Debugf("[subscribe]event type %s not match subscribe type regexp, skip", event.GetType())
+				logrus.Debugf("[SubscribeWithHandler]event type %s not match SubscribeWithHandler type regexp, skip", event.GetType())
 				continue
 			}
-			logrus.Debugf("[subscribe]send cloudevent:{%+v}", event)
+			logrus.Debugf("[SubscribeWithHandler]send cloudevent:{%+v}", event)
 
 			resp := &v1.CloudEventResponse{
+				Key:    item.Key(),
 				Offset: item.Version(),
 				Event:  event,
 			}
-			if err := handler.handler(resp); err != nil {
-				logrus.Errorf("[subscribe]key:%s,send cloudevent error:%v", item.Key(), err.Error())
+			if err := handler.Handler(resp); err != nil {
+				logrus.Errorf("[SubscribeWithHandler]key:%s,send cloudevent error:%v", item.Key(), err.Error())
 				return status.Error(codes.Internal, err.Error())
 			} else {
 				offset = item.Version()
@@ -202,7 +214,7 @@ func iter(prefix []byte, offset uint64, handler subscribeHandler, filter *regexp
 		return nil
 	}
 	if err := store.KvStore.View(it); err != nil {
-		logrus.Errorf("[subscribe]iterator event error:%v", err)
+		logrus.Errorf("[SubscribeWithHandler]iterator event error:%v", err)
 		return offset, status.Error(codes.Internal, err.Error())
 	}
 	return offset, nil
@@ -244,12 +256,4 @@ func (s *EventService) notify() {
 		}
 		s.subscribers = make([]chan interface{}, 0)
 	}
-}
-
-func (s *EventService) startIndexServer(ctx context.Context, kvsvc *KeyValueService) error {
-	is := &indexService{
-		evsvc: s,
-		kvsvc: kvsvc,
-	}
-	return is.Start(ctx)
 }

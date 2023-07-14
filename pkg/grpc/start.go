@@ -26,9 +26,13 @@ func StartGrpc(ctx context.Context) error {
 	keyValueService := newPrivateKeyValueServiceServer()
 	eventService := newPublicEventServiceServer()
 	eventService.startSubscribeServer(ctx)
-	if err := eventService.startIndexServer(ctx, keyValueService); err != nil {
-		return err
+
+	for _, factory := range subscriberFactories {
+		if err := factory(keyValueService, eventService).Start(ctx); err != nil {
+			return err
+		}
 	}
+
 	v1.RegisterPrivateKeyValueServiceServer(s, keyValueService)
 	v1.RegisterPublicEventServiceServer(s, eventService)
 

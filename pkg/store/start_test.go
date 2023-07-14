@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
@@ -65,51 +66,47 @@ func TestIterForSequence(t *testing.T) {
 	}
 	defer func() { y.Check(db.Close()) }()
 
-	bkey := func(i int) []byte {
-		return []byte(fmt.Sprintf("%09d", i))
-	}
-	bval := func(i int) []byte {
-		return []byte(fmt.Sprintf("%025d", i))
-	}
-
-	txn := db.NewTransaction(true)
-
-	// Fill in 1000 items
-	n := 1000
-	for i := 0; i < n; i++ {
-		err := txn.SetEntry(badger.NewEntry(bkey(i), bval(i)))
-		if err != nil {
-			panic(err)
+	sourceIds := []string{"abc", "ghi", "def"}
+	eventIds := []string{"123", "789", "456"}
+	slotIds := []string{"1", "3", "2"}
+	entries := make([]*badger.Entry, 0, 27)
+	for _, sourceId := range sourceIds {
+		for _, eventId := range eventIds {
+			for _, slot := range slotIds {
+				//key := fmt.Sprintf(`%s/%025d/%s/%s/%s`, "C", timestamppb.Now().AsTime().UnixNano(), sourceId, eventId, slot)
+				key := fmt.Sprintf(`%s/%s/%s/%s/%025X`, "C", sourceId, eventId, slot, timestamppb.Now().AsTime().UnixNano())
+				entries = append(entries, badger.NewEntry([]byte(key), []byte(key)))
+				time.Sleep(time.Millisecond)
+			}
 		}
 	}
 
-	if err := txn.Commit(); err != nil {
-		panic(err)
+	if err := db.Update(func(txn *badger.Txn) error {
+		for _, entry := range entries {
+			if err := txn.SetEntry(entry); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
 	}
 
 	opt := badger.DefaultIteratorOptions
-	opt.PrefetchSize = 10
-
-	// Iterate over 1000 items
-	var count int
-	err = db.View(func(txn *badger.Txn) error {
-		it := txn.NewIterator(opt)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			fmt.Printf("%s \n", string(it.Item().Key()))
-			it.Item().Value(func(val []byte) error {
-				fmt.Printf("value:%s \n", string(val))
-				return nil
-			})
-			count++
+	opt.Prefix = []byte("C")
+	if err := db.View(func(txn *badger.Txn) error {
+		iterator := txn.NewIterator(opt)
+		defer iterator.Close()
+		for iterator.Rewind(); iterator.Valid(); iterator.Next() {
+			item := iterator.Item()
+			k := item.Key()
+			split := strings.Split(string(k), "/")
+			fmt.Printf("key:%s ,%s \n", k, split[len(split)-1])
 		}
 		return nil
-	})
-	if err != nil {
-		panic(err)
+	}); err != nil {
+		t.Fatal(err)
 	}
-	fmt.Printf("Counted %d elements", count)
-
 }
 
 func TestIterForTimestamp(t *testing.T) {

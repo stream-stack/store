@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stream-stack/store/pkg/config"
 	"github.com/stream-stack/store/pkg/grpc"
+	"github.com/stream-stack/store/pkg/grpc/subscriber"
+	_ "github.com/stream-stack/store/pkg/grpc/subscriber"
 	"github.com/stream-stack/store/pkg/store"
 	"math/rand"
 	"os"
@@ -55,6 +57,7 @@ func NewCommand() (*cobra.Command, context.Context, context.CancelFunc) {
 	grpc.InitFlags()
 	store.InitFlags()
 	config.InitFlags()
+	subscriber.InitFlags()
 
 	viper.AddConfigPath(`./conf`)
 	viper.SetConfigName("config")
