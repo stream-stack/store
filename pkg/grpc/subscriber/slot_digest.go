@@ -146,18 +146,8 @@ func (s *slotDigestSubscriber) Context() context.Context {
 
 func (s *slotDigestSubscriber) Handler(response *v1.CloudEventResponse) error {
 	event := response.GetEvent()
-	if event == nil || len(event.GetId()) == 0 {
-
-		return nil
-	}
-	slot, err := util.GetSlot(event)
-	if err != nil {
-		return err
-	}
-	withEvent, err := util.FormatKeyWithEvent(event)
-	if err != nil {
-		return err
-	}
+	slot := response.Slot
+	key := response.Key
 	digester, ok := slotDigestMap[slot]
 	if !ok {
 		s.slotDigestMapOpCh <- func(m map[string]*slotDigester) {
@@ -170,9 +160,18 @@ func (s *slotDigestSubscriber) Handler(response *v1.CloudEventResponse) error {
 			}
 		}
 	}
-	digester.op <- func(f *cuckoo.Filter) {
-		f.Add(withEvent)
+	var f func(f *cuckoo.Filter)
+	if event == nil || len(event.GetId()) == 0 {
+		f = func(f *cuckoo.Filter) {
+			f.Add(key)
+		}
+	} else {
+		f = func(f *cuckoo.Filter) {
+			f.Delete(key)
+		}
 	}
+
+	digester.op <- f
 	return nil
 }
 

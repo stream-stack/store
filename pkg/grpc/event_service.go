@@ -49,27 +49,16 @@ func (s *EventService) Subscribe(request *v1.SubscribeRequest, server v1.PublicE
 }
 
 func (s *EventService) Get(ctx context.Context, get *v1.EventGetRequest) (*v1.CloudEventResponse, error) {
-	v := &v1.CloudEvent{}
+	v := &v1.CloudEventStoreRequest{}
 	var offset uint64
-	key := util.FormatKeyWithGet(get)
+	key := util.FormatKeyWithEventGetRequest(get)
 	if err := store.KvStore.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(key)
 		if err != nil {
 			return err
 		}
-		var originKey []byte
-		if err := item.Value(func(val []byte) error {
-			originKey = val
-			return nil
-		}); err != nil {
-			return err
-		}
-		i, err := txn.Get(originKey)
-		if err != nil {
-			return err
-		}
-		offset = i.Version()
-		return i.Value(func(val []byte) error {
+		offset = item.Version()
+		return item.Value(func(val []byte) error {
 			return proto.Unmarshal(val, v)
 		})
 	}); err != nil {
@@ -80,14 +69,21 @@ func (s *EventService) Get(ctx context.Context, get *v1.EventGetRequest) (*v1.Cl
 		return nil, status.Error(errCode, err.Error())
 	}
 	return &v1.CloudEventResponse{
-		Offset: offset,
-		Event:  v,
+		Offset:    offset,
+		Event:     v.Event,
+		Key:       key,
+		Slot:      v.Slot,
+		EventType: v.EventType,
+		Timestamp: v.Timestamp,
 	}, nil
 }
 
-func (s *EventService) ReStore(ctx context.Context, event *v1.CloudEvent) (*v1.CloudEventStoreResult, error) {
-	key := util.FormatKeyWithEventTimestamp(event)
-	marshal, err := proto.Marshal(event)
+func (s *EventService) ReStore(ctx context.Context, request *v1.CloudEventStoreRequest) (*v1.CloudEventStoreResult, error) {
+	key, err := util.FormatKeyWithRequest(request)
+	if err != nil {
+		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
+	}
+	marshal, err := proto.Marshal(request)
 	if err != nil {
 		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -99,13 +95,12 @@ func (s *EventService) ReStore(ctx context.Context, event *v1.CloudEvent) (*v1.C
 	return &v1.CloudEventStoreResult{}, nil
 }
 
-func (s *EventService) Store(ctx context.Context, event *v1.CloudEvent) (*v1.CloudEventStoreResult, error) {
-	logicKey, err := util.FormatKeyWithEvent(event)
+func (s *EventService) Store(ctx context.Context, request *v1.CloudEventStoreRequest) (*v1.CloudEventStoreResult, error) {
+	logicKey, err := util.FormatKeyWithRequest(request)
 	if err != nil {
 		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
 	}
-	key := util.FormatKeyWithEventTimestamp(event)
-	marshal, err := proto.Marshal(event)
+	marshal, err := proto.Marshal(request)
 	if err != nil {
 		return &v1.CloudEventStoreResult{Message: err.Error()}, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -115,7 +110,7 @@ func (s *EventService) Store(ctx context.Context, event *v1.CloudEvent) (*v1.Clo
 			if err != badger.ErrKeyNotFound {
 				return err
 			}
-			return txn.Set(key, marshal)
+			return txn.Set(logicKey, marshal)
 		} else {
 			var logicItem *badger.Item
 			if err = item.Value(func(val []byte) error {
@@ -183,26 +178,30 @@ func iter(option badger.IteratorOptions, handler subscribeHandler, filter *regex
 		defer iterator.Close()
 		for iterator.Rewind(); iterator.Valid(); iterator.Next() {
 			item := iterator.Item()
-			event := &v1.CloudEvent{}
+			request := &v1.CloudEventStoreRequest{}
 			if err := item.Value(func(val []byte) error {
 				if len(val) == 0 {
 					return nil
 				}
-				return proto.Unmarshal(val, event)
+				return proto.Unmarshal(val, request)
 			}); err != nil {
 				logrus.Errorf("[SubscribeWithHandler]key:%s , unmarshal value error:%v", item.Key(), err.Error())
 				return status.Error(codes.Internal, err.Error())
 			}
-			if filter != nil && !filter.MatchString(event.GetType()) {
-				logrus.Debugf("[SubscribeWithHandler]event type %s not match SubscribeWithHandler type regexp, skip", event.GetType())
+			eventType := request.GetEvent().GetType()
+			if filter != nil && !filter.MatchString(eventType) {
+				logrus.Debugf("[SubscribeWithHandler]request type %s not match SubscribeWithHandler type regexp, skip", eventType)
 				continue
 			}
-			logrus.Debugf("[SubscribeWithHandler]send cloudevent:{%+v}", event)
+			logrus.Debugf("[SubscribeWithHandler]send cloudevent:{%+v}", request)
 
 			resp := &v1.CloudEventResponse{
-				Key:    item.Key(),
-				Offset: item.Version(),
-				Event:  event,
+				Offset:    item.Version(),
+				Event:     request.Event,
+				Key:       item.Key(),
+				Slot:      request.GetSlot(),
+				EventType: request.GetEventType(),
+				Timestamp: request.GetTimestamp(),
 			}
 			if err := handler.Handler(resp); err != nil {
 				logrus.Errorf("[SubscribeWithHandler]key:%s,send cloudevent error:%v", item.Key(), err.Error())
